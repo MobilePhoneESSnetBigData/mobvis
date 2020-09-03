@@ -1,0 +1,38 @@
+Package: mobvis
+Type: Package
+Title: Visualization of mobile phone location algorithm results
+Version: 0.1.0
+Authors@R: c(person("Martijn", "Tennekes", email="mtennekes@gmail.com", role=c("aut", "cre")))
+Description: Visualization of mobile phone location algorithm results
+License: EUPL
+LazyData: true
+Date: 2020-08-17
+Depends:
+    R (>= 3.5)
+Imports:
+    mobloc (>= 0.5),
+    methods,
+    stats,
+    graphics,
+    sf (>= 0.6-3),
+    RColorBrewer,
+    shiny,
+    shinyjs,
+    data.table,
+    magrittr,
+    parallel,
+    doParallel,
+    foreach,
+    ggplot2,
+    gridExtra,
+    leaflet,
+    raster
+Suggests:
+    lwgeom,
+	rmarkdown,
+    knitr,
+    tmap
+URL: https://github.com/MobilePhoneESSnetBigData/mobloc
+BugReports: https://github.com/MobilePhoneESSnetBigData/mobloc/issues
+VignetteBuilder: knitr
+RoxygenNote: 7.1.1
