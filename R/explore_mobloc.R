@@ -24,6 +24,7 @@ prior_to_df <- function(prior, raster) {
 #' @param coverage_map_dBm coverage map, created with \code{\link{create_coverage_map}} (with \code{type = "dBm"}). If not specified, it will be created (which takes some time).
 #' @param coverage_map_s coverage map, created with \code{\link{create_coverage_map}} (with \code{type = "s"}). If not specified, it will be created (which takes some time).
 #' @param best_server_map best server map, created with \code{\link{create_best_server_map}}. If not specified, it will be created (which takes some time).
+#' @param settings mobvis settings, see \code{\link{mobvis_settings}}
 #' @note Note that duo to the reprojection of the raster to the web mercator projection (for interactive maps), the visualized raster does not correspond exactly to the output raster.
 #' @import shiny
 #' @importFrom shinyjs useShinyjs disable
@@ -35,7 +36,7 @@ prior_to_df <- function(prior, raster) {
 #' @example ./examples/explore_mobloc.R
 #' @seealso \href{../doc/mobloc.html}{\code{vignette("mobloc")}}
 #' @export
-explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filter = NULL, coverage_map_dBm = NULL, coverage_map_s = NULL, best_server_map = NULL) {
+explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filter = NULL, coverage_map_dBm = NULL, coverage_map_s = NULL, best_server_map = NULL, settings = mobvis_settings()) {
 
     crs <- st_crs(raster)
 
@@ -270,7 +271,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
             output$map <- renderTmap({
                 #map_mob_cells(cp, rst, var = type, offset = ifelse(input$offset, offset_value, 0), borders = rect, proxy = FALSE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel)
 
-                base_tmap(cp, offset_value, rect, basemaps = "OpenStreetMap")
+                base_tmap(cp, offset_value, rect, basemaps = "OpenStreetMap", settings)
             })
 
 
@@ -297,7 +298,9 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                 }
                 if (type %in% c("pg", "pga")) prior <- get_prior() else prior <- NULL
 
-                if (input$show == "grid") {
+                if (input$show == "grid" && type == "none") {
+                    rst <- NULL
+                } else if (input$show == "grid") {
                     rst <- create_q_raster(raster, type = type, prior = prior, coverage_map_dBm, coverage_map_s, bsm)
                 } else {
                     if (type %in% c("bsm", "pg", "pag", "pga")) {
@@ -325,7 +328,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                 }
 
                 #viz_p(cp = cp, rst = rst, var = type, trans = input$trans, offset = ifelse(input$offset, offset_value, 0), rect = rect, proxy = TRUE)
-                map_mob_cells(cp, rst, var = type, offset = ifelse(input$offset, offset_value, 0), borders = rect, proxy = TRUE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel)
+                map_mob_cells(cp, rst, var = type, offset = ifelse(input$offset, offset_value, 0), borders = rect, proxy = TRUE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel, settings = settings)
 
             })
 

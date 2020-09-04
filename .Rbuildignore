@@ -6,3 +6,7 @@ sandbox
 data_generation
 .travis.yml
 .appveyor.yml
+local
+local2
+local3
+local4

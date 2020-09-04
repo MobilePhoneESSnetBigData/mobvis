@@ -128,6 +128,7 @@ distance_plot <- function(W, ple, range, base_size = 11, show_classes = TRUE) {
 #' @rdname plot_functions
 #' @param midpoint middle point in the logistic function to map signal strength to probability
 #' @param steepness width of the logistic function to map signal strength to probability
+#' @export
 signal_dominance_plot <- function(midpoint, steepness, base_size = 11, show_classes = TRUE) {
     dBm <- likelihood <- rsig <- fill <- xmin <- xmax <- ymin <- ymax <- NULL
 

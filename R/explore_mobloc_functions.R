@@ -39,7 +39,7 @@ base_map <- function(cp, offset, epsg) {
 
 }
 
-base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap", cells = character()) {
+base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap", cells = character(), settings = mobvis_settings()) {
     cp$sel = factor(ifelse(cp$cell %in% cells, "Selected",
                     ifelse(cp$small, "Small cell", "Normal cell")), levels = c("Selected", "Small cell", "Normal cell"))
     cp = cp[, c("sel", "small", "direction", "x", "y", "cell")]
@@ -55,30 +55,32 @@ base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap"
         tm <- tm_basemap("OpenStreetMap")
     }
 
-    cell_palette = c("Selected" = "red", "Small cell" = "gray", "Normal cell" = "gold")
+
+    cell_palette = settings$cell_colors
+    cell_legend = settings$cell_legend
 
     if (offset > 0) {
         tm <- tm + tm_shape(cp_lines) +
-            tm_lines(col = "#777777", lwd = 3, group = "Cell locations", interactive = FALSE) +
+            tm_lines(col = "#777777", lwd = 3, group = "Cell locations", interactive = FALSE, zindex = 401) +
             tm_shape(cp2) +
-            tm_dots("sel", palette = cell_palette, size = .04, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE)
+            tm_dots("sel", palette = cell_palette, size = .04, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 401, legend.show = cell_legend)
     } else {
         tm <- tm + tm_shape(cp) +
-            tm_dots("sel", palette = cell_palette, size = .04, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE)
+            tm_dots("sel", palette = cell_palette, size = .04, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 401, legend.show = cell_legend)
     }
 
     if (!is.null(borders)) {
         #tm <- tm + tm_shape(borders) + tm_polygons(col = NA, border.col = "black", group = "Cell locations", interactive = FALSE, alpha = 0)
-        tm <- tm + tm_shape(borders) + tm_borders(col = "black", group = "Cell locations")
+        tm <- tm + tm_shape(borders, is.master = TRUE) + tm_borders(col = "black", group = "Cell locations", zindex = 402)
     }
     tm
 }
 
 
 
-#' Visualize mobile phone cells and auxiliary data
+#' Low-level level to visualize mobile phone cells and auxiliary data
 #'
-#' Visualize mobile phone cells and auxiliary data, such as signal strength, location estimation variables. This function is used in \code{\link{explore_mobloc}}.
+#' Visualize mobile phone cells and auxiliary data, such as signal strength, location estimation variables. This function is used in \code{\link{explore_mobloc}}, and also by dedicated functions such as \code{\link{map_sig_strength}}.
 #'
 #' @param cp cellplan
 #' @param rst raster data
@@ -88,14 +90,14 @@ base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap"
 #' @param cells cells to select
 #' @param offset offset of the cells. If not 0, the cells are moved into the propagation direction
 #' @param borders borders (polygon) of the region of interest
-#' @param cell_colors colors of the cells
 #' @param interactive should the map be interactive or static?
 #' @param basemaps basemaps used in the interactive map
 #' @param opacity the opacity of the raster layer.
 #' @param proxy should the map be updated in a Shiny app?
+#' @param settings mobvis settings
 #' @import tmap
 #' @export
-map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), offset = 0, borders = NULL, cell_colors = c("Selected" = "red", "Small cell" = "gray", "Normal cell" = "gold"), interactive = TRUE, basemaps = "OpenStreetMap", opacity = 1, proxy = FALSE) {
+map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), offset = 0, borders = NULL, interactive = TRUE, basemaps = "OpenStreetMap", opacity = 1, proxy = FALSE, settings = mobvis_settings()) {
     # check required columns
     if (!all(c("cell", "small", "direction", "x", "y") %in% names(cp))) stop("cp does not contain all the required columns: cell, small, direction, x, and y")
 
@@ -106,10 +108,12 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
     # } else {
     #     tm <- base_tmap(cp = cp, offset = offset, borders = borders)
     # }
-    tm2 <- base_tmap(cp = cp, offset = offset, borders = borders, basemaps = if (proxy) NA else basemaps, cells)
+    tm2 <- base_tmap(cp = cp, offset = offset,
+                     borders = if (proxy) NULL else borders,
+                     basemaps = if (proxy) NA else basemaps, cells = cells, settings = settings)
 
 
-
+    cell_colors <- settings$cell_colors
     # create palette for cells
     if (!is.null(names(cell_colors))) {
         cell_palette = cell_colors[match(c("Selected", "Small cell", "Normal cell"), names(cell_colors))]
@@ -131,6 +135,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
     if (var != "none") {
         if (var == "bsm") {
             tmap_options(max.categories = 1000)
+            appendix <- ""
         } else if (!is.factor(rst)) {
             values <- rst[]
             maxv <- max(values, na.rm = TRUE)
@@ -153,31 +158,40 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
         }
 
 
+
+
+
+
         if (is.na(title)) {
-            title <- switch(var,
-                            dBm = "Signal strength in dBm",
-                            s = "Signal dominance - s",
-                            bsm = "Best server map",
-                            #lu = "Land use prior (in %)",
-                            pag = paste0("Connection likelihood - P(a|g)", appendix),
-                            pg = paste0("Prior - P(g)", appendix),
-                            pga = paste0("Location posterior - P(g|a)", appendix),
-                            "")
+            title <- if (var %in% c("custom", "none")) "" else paste0(unname(settings$titles[var]), appendix)
+            #
+            #
+            # title <- switch(var,
+            #                 dBm = "Signal strength in dBm",
+            #                 s = "Signal dominance - s",
+            #                 bsm = "Best server map",
+            #                 #lu = "Land use prior (in %)",
+            #                 pag = paste0("Connection likelihood - P(a|g)", appendix),
+            #                 pg = paste0("Prior - P(g)", appendix),
+            #                 pga = paste0("Location posterior - P(g|a)", appendix),
+            #                 "")
         }
 
         if (all(is.na(rst[]))) var <- "empty"
 
         if (is.na(palette[1])) {
-            palette <- ifelse(var %in% c("dBm", "s"), "-Blues",
-                              ifelse(var == "pga", "viridis",
-                                     ifelse(var == "pag", "-Greens",
-                                            ifelse(var == "bsm", "Set2" , "-Blues"))))
+            palette <- if (var %in% c("custom", "none", "empty")) settings$palette else unname(settings$palettes[[var]])
+
+            # palette <- ifelse(var %in% c("dBm", "s"), "-Blues",
+            #                   ifelse(var == "pga", "viridis",
+            #                          ifelse(var == "pag", "-Greens",
+            #                                 ifelse(var == "bsm", "Set2" , "-Blues"))))
         }
 
         cls <- if (var == "dBm")  {
-            dBm_classes
+            settings$dBm_classes
         } else {
-            qty_classes
+            settings$s_classes
         }
 
         # if (proxy) {
@@ -199,7 +213,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
         #tm <- tm + tm_shape(borders) + tm_polygons("black", group = "Borders")
 
 
-        if (var %in% c("dBm", "s")) {
+        if (var %in% c("dBm", "s") && settings$use_classes) {
             tm <- tm_shape(rst) +
                 tm_raster(names(rst)[1], palette = cls$colors, title = title, breaks = cls$breaks, labels = cls$labels, group = "Data", zindex = 404)
         } else if (var != "empty") {
@@ -217,9 +231,9 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
 
     #browser()
     if (proxy) {
-        tmapProxy("map", x = tm_remove_layer(404) + tm)
+        tmapProxy("map", x = tm_remove_layer(401) + tm_remove_layer(404) + tm2 + tm)
     } else {
-        tm + tm2 + tm_layout(legend.outside = TRUE)
+        tm + tm2 + tm_layout(legend.outside = TRUE, frame = FALSE)
     }
 }
 

@@ -1,0 +1,142 @@
+---
+title: "Visualizing mobloc"
+author: "Martijn Tennekes"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Visualizing mobloc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The mobloc package is used to approximate geographic location given the connection between a mobile device and the cell (an antenna may contain multiple cells). This is done by a physical model of signal strength and a Baysian method to calculate the probability per geographic location (for computational reasons grouped by grid tiles) given a certain prior (i.e. the prior change of connection, e.g. based on land use) and a certain likelihood, which is the probability of connection to a certain cell given the geographic location, which takes into account the probability of connection to other nearby cells and the modeled signal strength. These methods are described in detail in [1]. The implementation is described in the documentation of the mobloc package [2].
+
+
+## Example data from mobloc
+
+The mobloc package contains fictional data of a cellplan, which contains the locations and physical properties of the cells from a certain MNO. The cells are ficionally placed in the region of Zuid-Limburg, which is NUTS region NL423.
+
+The example data consists of a fictional cellplan, `ZL_cellplan`, the municipality polygons `ZL_muni`, the elevation data `ZL_elevation`, and land use data `ZL_landuse`.
+
+
+```{r}
+library(mobloc)
+data("ZL_cellplan", "ZL_muni", "ZL_elevation", "ZL_landuse")
+```
+
+
+
+## Processing mobloc data
+
+```{r}
+# set parameters
+ZL_param <- mobloc_param()
+
+# create environment layer (needed to calculate path loss exponent (ple))
+ZL_envir <- combine_raster_layers(ZL_landuse, weights = c(1, 1, 1, 0, 0))
+
+# validate cellplan
+ZL_cellplan <- validate_cellplan(ZL_cellplan, param = ZL_param, region = ZL_muni,
+    envir = ZL_envir, elevation = ZL_elevation)
+
+# create raster
+ZL_bbox <- sf::st_bbox(c(xmin = 4012000, ymin = 3077000, xmax = 4048000, ymax = 3117000),
+    crs = sf::st_crs(3035))
+ZL_raster <- create_raster(ZL_bbox)
+
+# compute the signal strength model
+ZL_strength <- compute_sig_strength(cp = ZL_cellplan, raster = ZL_raster,
+    elevation = ZL_elevation, param = ZL_param)
+
+# create likelihoods
+ZL_strength_llh <- create_strength_llh(ZL_strength, param = ZL_param)
+ZL_voronoi_llh <- create_voronoi_llh(ZL_cellplan, ZL_raster)
+
+# create priors
+ZL_uniform_prior <- create_uniform_prior(ZL_raster)
+ZL_network_prior <- create_network_prior(ZL_strength, ZL_raster)
+ZL_landuse_prior <- create_prior(ZL_landuse, weights = c(1, 1, .1, 0, .5))
+```
+
+## Mobloc dashboards
+
+```{r}
+library(mobvis)
+```
+
+The first dashboard examines the parameters used in mobloc. It can be started with the following function call.
+
+```{r, eval=FALSE}
+setup_sig_strength_model()
+```
+
+The dashboard that examines the processed data from mobloc can be called as follows:
+
+```{r, eval=FALSE}
+# explore the results
+explore_mobloc(ZL_cellplan, ZL_raster, ZL_strength,
+               list(landuse = ZL_landuse_prior, network = ZL_network_prior, uniform = ZL_uniform_prior),
+               list(Strength = ZL_strength_llh, Voronoi = ZL_voronoi_llh),
+               param = ZL_param)
+```
+
+The individual plot functions will be discussed in the sections below.
+
+
+## Visualization functions
+
+### Parameter setup
+
+The following plot functions are used to setup the parameters for mobloc. These are used in the dashboard `setup_sig_strength_model`.
+
+The function `distance_plot` plots the relation between signal strength (in dBm) and distance in the propagation direction of the cell. This depends in the cell power in watt (W) and the path loss exponent (ple) which models how well the signal propagates (2 is free space, 4 is urban area).
+
+```{r}
+distance_plot(W = 4, ple = 4, range = 2000)
+```
+
+The function `signal_dominance_plot` plots the modeled relation between signal strength (in dBm) and the signal dominance (s).
+
+```{r}
+signal_dominance_plot(midpoint = -90, steepness = 0.5)
+```
+
+The function `radiation_plot` plots the modeled radiation pattern from the cell. The radiation pattern indicates how much signal loss there is in the azimuth plane (top view perpendicular to the propagation direction), and the elevation plane (side view perpendicular to the propagation direction).
+
+```{r, fig.show="hold", out.width="40%"}
+radiation_plot(type = "a", beam_width = 60, db_back = -30)
+radiation_plot(type = "e", beam_width = 10, db_back = -30)
+```
+
+
+### Analyse results
+
+```{r}
+map_sig_strength(rst = ZL_raster, dt = ZL_strength, cp = ZL_cellplan, cells = "BEE_150_N1", region = ZL_muni, type = "s", interactive = FALSE)
+```
+
+```{r}
+settings <- mobvis_settings()
+settings$cell_colors <- "black"
+settings$cell_colors <- "black"
+settings$cell_legend <- FALSE
+settings$use_classes <- FALSE
+
+map_sig_strength(rst = ZL_raster, dt = ZL_strength, cp = ZL_cellplan, cells = "BEE_150_N1", region = ZL_muni, type = "s", interactive = FALSE, settings = settings)
+```
+
+
+
+
+## References
+
+1. Tennekes, Gootzen, Y.A.P.M., Shah, S.H. (2020) A Bayesian approach to location estimation of mobile devices from mobile network operator data, working paper, Statistics Netherlands, Heerlen.
+2. Tennekes, M. (2020) mobloc: mobile location algorithms and tools, R-package
+

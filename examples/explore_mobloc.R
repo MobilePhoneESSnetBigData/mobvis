@@ -58,12 +58,10 @@ map_mob_cells(cp, rst, title = "Test", interactive = FALSE)
 map_sig_strength(rst = ZL_raster, dt = ZL_strength, cp = ZL_cellplan, cells = c("BEE_150_N1", "BEE_150_N2"), region = ZL_muni, type = "dBm")
 
 
-
 map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dBm", "s"), interactive = TRUE) {
     if (is.na(cells[1])) cells <- dt$cell
 
     dtsel <- dt[cell %in% cells, ][, list(dBm = max(dBm), s = max(s)), by = rid]
-
 
     p = create_p_raster(rst, dtsel, type = type)
     map_mob_cells(cp, p, var = type, borders = region, interactive = interactive)
