@@ -1,4 +1,4 @@
-#' Map signal strength
+#' Map signal strength (dBm), signal dominance (s), prior (pg), likelihood (pag), and posterior (pga).
 #'
 #' Map signal strength
 #'
@@ -10,6 +10,8 @@
 #' @param type type
 #' @param interactive interactive
 #' @param settings settings
+#' @rdname map_functions
+#' @name map_sig_strength
 #' @export
 map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dBm", "s"), interactive = TRUE, settings = mobvis_settings()) {
 
@@ -30,7 +32,22 @@ map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("d
 }
 
 
+#' @rdname map_functions
+#' @name map_pg
+#' @export
+map_pg <- function(rst, cp, region = NULL, interactive = TRUE, settings = mobvis_settings()) {
+    type <- "pag"
+    p = rst
+    if (is.null(region)) {
+        region <- create_bbx_rect(raster2bbx(rst))
+    }
+    map_mob_cells(cp, p, var = type, borders = region, interactive = interactive, settings = settings)
+}
 
+
+#' @rdname map_functions
+#' @name map_pag
+#' @export
 map_pag <- function(rst, dt, cp, cells = NA, region = NULL, interactive = TRUE, settings = mobvis_settings()) {
     type <- "pag"
 
@@ -39,6 +56,28 @@ map_pag <- function(rst, dt, cp, cells = NA, region = NULL, interactive = TRUE, 
     if (is.na(cells[1])) cells <- dt$cell
 
     dtsel <- dt[cell %in% cells, ][, list(pag = max(pag)), by = rid]
+
+    p = create_p_raster(rst, dtsel, type = type)
+
+    if (is.null(region)) {
+        region <- create_bbx_rect(raster2bbx(rst))
+    }
+
+    map_mob_cells(cp, p, var = type, borders = region, cells = cells_highlight, interactive = interactive, settings = settings)
+}
+
+
+#' @rdname map_functions
+#' @name map_pga
+#' @export
+map_pga <- function(rst, dt, cp, cells = NA, region = NULL, interactive = TRUE, settings = mobvis_settings()) {
+    type <- "pga"
+
+    cells_highlight <- if (is.na(cells[1])) character() else cells
+
+    if (is.na(cells[1])) cells <- dt$cell
+
+    dtsel <- dt[cell %in% cells, ][, list(pga = max(pga)), by = rid]
 
     p = create_p_raster(rst, dtsel, type = type)
 

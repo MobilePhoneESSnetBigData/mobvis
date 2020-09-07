@@ -23,7 +23,7 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
                                     pag = "Connection likelihood - P(a|g)",
                                     pga = "Location posterior - P(g|a)"),
                          palettes = list(
-                             dBm = "-Blues",
+                             dBm = "Blues",
                              s = "-Blues",
                              bsm = "Set2",
                              pg = "-Blues",

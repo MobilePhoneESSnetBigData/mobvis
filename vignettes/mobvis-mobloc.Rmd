@@ -13,7 +13,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   fig.width=6, 
-  fig.height=3,
+  fig.height=4,
   comment = "#>"
 )
 ```
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 The mobloc package is used to approximate geographic location given the connection between a mobile device and the cell (an antenna may contain multiple cells). This is done by a physical model of signal strength and a Baysian method to calculate the probability per geographic location (for computational reasons grouped by grid tiles) given a certain prior (i.e. the prior change of connection, e.g. based on land use) and a certain likelihood (called connection likelihood in [1] and event location in [3]), which is the probability of connection to a certain cell given the geographic location, which takes into account the probability of connection to other nearby cells and the modeled signal strength. These methods are described in detail in [1]. The implementation is described in the documentation of the mobloc package [2].
 
 
-## Example data from mobloc
+## Processing example data in mobloc
 
 The mobloc package contains fictional **cellplan** dataset called `ZL_cellplan`. A cellplan is a dataset that contains the locations and physical properties of the cells from a certain MNO. The cells in `ZL_cellplan` are fictionally placed in the region of Zuid-Limburg, which is NUTS region NL423. Besides the cellplan, other datasets that are contained in mobloc are the municipality polygons for Zuid-Limburg `ZL_muni`, the elevation data `ZL_elevation`, and land use data `ZL_landuse`. 
 
@@ -34,9 +34,6 @@ data("ZL_cellplan", "ZL_muni", "ZL_elevation", "ZL_landuse")
 ```
 
 `ZL_cellplan` and `ZL_muni` are **sf** [4] objects of points and polygons respectively. The objects `ZL_elevation` and `ZL_landuse` are **raster** [5] objects.
-
-
-## Processing mobloc data
 
 The following code processes these input datasets. 
 
@@ -74,19 +71,26 @@ ZL_landuse_prior <- create_prior(ZL_landuse, weights = c(1, 1, .1, 0, .5))
 ZL_composite_prior <- create_prior(ZL_network_prior, ZL_landuse_prior, weights = c(0.5, 0.5))
 
 # caculate the posterior distributions
-ZL_posterior <- mobloc::calculate_posterior(prior = ZL_composite_prior, llh = ZL_strength_llh, raster = ZL_raster)
+ZL_posterior <- calculate_posterior(prior = ZL_composite_prior, llh = ZL_strength_llh, raster = ZL_raster)
 ```
 
-This code is explained in the documentation of the **mobloc** package.
+This code is explained in the documentation of the **mobloc** package. The most important objects are:
+
+* `ZL_param`, a list that contains all the parameters used in **mobloc**, e.g. the default physical properties of the cells.
+* `ZL_raster`, a `raster object that contains the geospatial information of the grid tiles, e.g. their spatial position and the resolution.
+* `ZL_strength`, a `data.table` object that contains the signal strength in dBm and the signal dominance (called `s`) per grid tile,
+* `ZL_xxx_llh`, `data.table` objects that contain the likelihood probabilities (event locations) per cell. This probability is called `pag`, which stands for `p(a|g)`, which is the probability that an event is logged at cell `a`, given that the device is located in grid tile `g`.
+* `ZL_xxx_prior`, `raster` objects in the same resolution as `ZL_raster`, that contain prior information. This probability is called `pg`, which stands for `p(g)`, the probability that a device is located in grid tile `g`.
+* `ZL_posterior`, a `data.table` that contains the posterior probabilities. This probability is called `pga`, which stands for `p(g|a)`, which is the probability that a device is located in grid tile `g`, given that an event is logged at cell `a`.
 
 
-## Mobloc dashboards
+## Visualization of mobloc parameters
 
 ```{r}
 library(mobvis)
 ```
 
-The first dashboard examines the parameters used in mobloc. It can be started with the following function call.
+The following function starts a dashboard that examines the parameters used in mobloc.
 
 ```{r, eval=FALSE}
 setup_sig_strength_model()
@@ -94,30 +98,13 @@ setup_sig_strength_model()
 
 <img src="images/setup_signal_strength.jpg" alt="" data-toggle="tooltip" data-placement="right" title="" data-original-title="" onload="$(this).tooltip()" width="700">
 
+This tool shows the signal strength model for one cell. 
 
-The dashboard that examines the processed data from mobloc can be called as follows:
+The left hand side panel shows the settings, which are by default set to values of the list we just created with `mobloc_param`. When *small cell* is ticked, the `_small` arguments are used. 
 
-```{r, eval=FALSE}
-# explore the results
-explore_mobloc(ZL_cellplan, ZL_raster, ZL_strength,
-               list(landuse = ZL_landuse_prior, network = ZL_network_prior, uniform = ZL_uniform_prior),
-               list(Strength = ZL_strength_llh, Voronoi = ZL_voronoi_llh),
-               param = ZL_param)
-```
+The plots on the right hand side shows the propagation results. The heatmap on the top right shows the top view of the signal strength of the cell. For normal directional cells, the direction in this plot is east. Small cells are assumed to be omnirectional. The four plots below the heatmap can be reproduced with the following single function calls.
 
-<img src="images/explore_mobloc.jpg" alt="" data-toggle="tooltip" data-placement="right" title="" data-original-title="" onload="$(this).tooltip()" width="700">
-
-
-The individual plot functions will be discussed in the sections below.
-
-
-## Visualization functions
-
-### Parameter setup
-
-The following plot functions are used to setup the parameters for mobloc. These are used in the dashboard `setup_sig_strength_model`.
-
-The function `distance_plot` plots the relation between signal strength (in dBm) and distance in the propagation direction of the cell. This depends in the cell power in watt (W) and the path loss exponent (ple) which models how well the signal propagates (2 is free space, 4 is urban area).
+The function `distance_plot` plots the relation between signal strength (in dBm) and distance in the propagation direction of the cell. This depends in the cell power in watt (`W`) and the path loss exponent (`ple`) which models how well the signal propagates (2 is free space, 4 is urban area, and is inside buildings).
 
 ```{r}
 distance_plot(W = 4, ple = 4, range = 2000)
@@ -129,28 +116,46 @@ The function `signal_dominance_plot` plots the modeled relation between signal s
 signal_dominance_plot(midpoint = -90, steepness = 0.5)
 ```
 
-The function `radiation_plot` plots the modeled radiation pattern from the cell. The radiation pattern indicates how much signal loss there is in the azimuth plane (top view perpendicular to the propagation direction), and the elevation plane (side view perpendicular to the propagation direction).
 
-```{r, fig.show="hold", out.width="40%"}
+Signal dominance can be interpreted as the quality of a connection between device and mobile phone, or in other words, how attractive it is to make create connection. It is based on the assumption that for a mobile phone network, it is not important whether the connection is good (say -90 dBm) or extreme good (say -70 dBm). When there are multiple cells to choose from, the current capacity is much more important. Likewise, if there is only one available cell for a device to connect to at a certain location, the network will do that, no matter whether the connection is fair (say -100 dBm) or bad (say -120 dBm). In order to flatten both tails, a logistic function has been applied [1]. The parameters for this function are midpoint and steepness.
+
+ The bottom two plots illustrate the radiation pattern in the horizontal/azimuth plane the the vertical/elevation plane. The black contour lines indicate the signal loss as a function of the offset angle. The red points are the -3dB points, i.e. the angle at which the signal loss is 3 dB. These radiation plots can also be generated directly in R with the function `radiation_plot`. The parameters `beam_v`, `azim_dB_back`, `beam_h`, and `elev_dB_back` have influence on these radiation pattern.
+
+
+
+The function `radiation_plot` plots the modeled radiation pattern from the cell. The radiation pattern indicates how much signal loss there is in the azimuth plane (top view perpendicular to the propagation direction), and the elevation plane (side view perpendicular to the propagation direction). The black contour lines indicate the signal loss as a function of the offset angle. The red points are the -3dB points, i.e. the angle at which the signal loss is 3 dB. The three parameters for this pattern are `type` which indicated whether it is applied to the azimuth (`"a"`) or elevation (`"e"`) place, `beam_width`, which specifies the angle at which the signal loss is 3 dB (so the angle between the red points in the diagram), and `db_back` which defines the signall loss the the angle in the opposite direction of the propagation direction.
+
+```{r, fig.show="hold", out.width="46%"}
 radiation_plot(type = "a", beam_width = 60, db_back = -30)
 radiation_plot(type = "e", beam_width = 10, db_back = -30)
 ```
 
 
-### Analyse results
+## Visualization of the mobloc output 
 
-```{r}
-map_sig_strength(rst = ZL_raster, 
-                 dt = ZL_strength, 
-                 cp = ZL_cellplan, 
-                 cells = "BEE_150_N1", 
-                 region = ZL_muni, 
-                 type = "s", 
-                 interactive = FALSE, 
-                 settings = mobvis_settings_static())
+The dashboard that examines the processed data from **mobloc** can be called as follows:
+
+```{r, eval=FALSE}
+# explore the results
+explore_mobloc(ZL_cellplan, ZL_raster, ZL_strength,
+               list(landuse = ZL_landuse_prior, network = ZL_network_prior, uniform = ZL_uniform_prior),
+               list(Strength = ZL_strength_llh, Voronoi = ZL_voronoi_llh),
+               param = ZL_param)
 ```
 
-```{r}
+<img src="images/explore_mobloc.jpg" alt="" data-toggle="tooltip" data-placement="right" title="" data-original-title="" onload="$(this).tooltip()" width="700">
+
+In the left-hand-side panel, the user is able to select which raster variable is shown on the map. The options are listed "Show" title. They are: signal strength (dBm), signal dominance, best server map, prior, likelihood, and posterior. Each of them will be shown and described below. The second column, called "Module Setup" configures the prior, the likelihood, the posterior (which uses the chosen prior and likelihood), and whether Timing Advance is used. The first option, called "Selection" determines whether the data is shown for all cells or one single cell. In the former case, the maximum number per grid tile is shown. For instance, if the signal strength in dBm is selected for all cells, the color of a grid tile represents the maximum signal strength.
+
+In the other tab panel, called "Cell data", cellplan data per cell is shown in a table.
+
+For each raster variable, there is a stand-alone function. These will be illustrated and described below.
+
+### Signal strength and signal dominance
+
+The function `map_sig_strength` is used to map the signal strength or dominance. Which of these two will be shown depends on the `type` argument.
+
+```{r,fig.show="hold", out.width="46%"}
 map_sig_strength(rst = ZL_raster, 
                  dt = ZL_strength, 
                  cp = ZL_cellplan, 
@@ -159,10 +164,63 @@ map_sig_strength(rst = ZL_raster,
                  type = "dBm", 
                  interactive = FALSE, 
                  settings = mobvis_settings_static())
+map_sig_strength(rst = ZL_raster, 
+                 dt = ZL_strength, 
+                 cp = ZL_cellplan, 
+                 cells = "BEE_150_N1", 
+                 region = ZL_muni, 
+                 type = "dBm", 
+                 interactive = FALSE, 
+                 settings = mobvis_settings_static(use_classes = FALSE))
+map_sig_strength(rst = ZL_raster, 
+                 dt = ZL_strength, 
+                 cp = ZL_cellplan, 
+                 cells = "BEE_150_N1", 
+                 region = ZL_muni, 
+                 type = "s", 
+                 interactive = FALSE, 
+                 settings = mobvis_settings_static())
+map_sig_strength(rst = ZL_raster, 
+                 dt = ZL_strength, 
+                 cp = ZL_cellplan, 
+                 cells = "BEE_150_N1", 
+                 region = ZL_muni, 
+                 type = "s", 
+                 interactive = FALSE, 
+                 settings = mobvis_settings_static(use_classes = FALSE))
 ```
 
+The function `mobvis_settings()` returns a list that contains settings for the plots drawn by **mobvis**. For instance default color palettes, titles, and whether the plot is static (such as shown here) or interactive (shown in the screenshot of the dashboard tool). The `function mobvis_settings_static()` returns the same list, with a few different values, which are aimed for static plots.
 
+As for signal strength and signal dominance, by default a diverging color palette is shown, from red via yellow to blue, which qualifies the signal strength/dominance as more or less follows: red is bad, orange is poor, yellow is fair, green is good, and blue is excellent. The mappings (so which values are bad, poor, etc.) can be adjusted via `mobvis_settings`. There is also a setting that disables these classes, which is in the maps on the right hand side.
 
+### Prior, likelihood and posterior
+
+The prior, likelihood and posterior can be shown with the functions `map_pg`, `map_pag`, and `map_pga` respectively.
+
+```{r,fig.show="hold", out.width="46%"}
+map_pg(rst = ZL_composite_prior,
+       cp = ZL_cellplan,
+       region = ZL_muni,
+       interactive = FALSE,
+       settings = mobvis_settings_static())
+map_pag(rst = ZL_raster,
+        dt = ZL_strength_llh,
+        cp = ZL_cellplan,
+        cells = "BEE_150_N1",
+        region = ZL_muni,
+        interactive = FALSE,
+        settings = mobvis_settings_static())
+map_pga(rst = ZL_raster,
+        dt = ZL_posterior,
+        cp = ZL_cellplan,
+        cells = "BEE_150_N1",
+        region = ZL_muni,
+        interactive = FALSE,
+        settings = mobvis_settings_static())
+```
+
+Note that the prior distribution is the only one that is defined on the level of grid tile; recall that the notation is p(g). The other two, the likelihood (event location) and posterior distribution, are defined per grid tile per cell, in mathematical notation p(a|g) and p(g|a) respectively.
 
 ## References
 

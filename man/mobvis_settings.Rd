@@ -9,7 +9,7 @@ mobvis_settings(
   titles = c(dBm = "Signal strength in dBm", s = "Signal dominance - s", bsm =
     "Best server map", pg = "Prior - P(g)", pag = "Connection likelihood - P(a|g)", pga =
     "Location posterior - P(g|a)"),
-  palettes = list(dBm = "-Blues", s = "-Blues", bsm = "Set2", pg = "-Blues", pag =
+  palettes = list(dBm = "Blues", s = "-Blues", bsm = "Set2", pg = "-Blues", pag =
     "-Greens", pga = "viridis"),
   palette = "-Blues",
   cell_colors = c(Selected = "red", `Small cell` = "goldenrod3", `Normal cell` =

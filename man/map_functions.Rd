@@ -2,7 +2,10 @@
 % Please edit documentation in R/map_functions.R
 \name{map_sig_strength}
 \alias{map_sig_strength}
-\title{Map signal strength}
+\alias{map_pg}
+\alias{map_pag}
+\alias{map_pga}
+\title{Map signal strength (dBm), signal dominance (s), prior (pg), likelihood (pag), and posterior (pga).}
 \usage{
 map_sig_strength(
   rst,
@@ -11,6 +14,34 @@ map_sig_strength(
   cells = NA,
   region = NULL,
   type = c("dBm", "s"),
+  interactive = TRUE,
+  settings = mobvis_settings()
+)
+
+map_pg(
+  rst,
+  cp,
+  region = NULL,
+  interactive = TRUE,
+  settings = mobvis_settings()
+)
+
+map_pag(
+  rst,
+  dt,
+  cp,
+  cells = NA,
+  region = NULL,
+  interactive = TRUE,
+  settings = mobvis_settings()
+)
+
+map_pga(
+  rst,
+  dt,
+  cp,
+  cells = NA,
+  region = NULL,
   interactive = TRUE,
   settings = mobvis_settings()
 )

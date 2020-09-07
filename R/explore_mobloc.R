@@ -390,17 +390,21 @@ create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel) {
     } else if (type == "pag") {
         dt[, x := pag]
     } else {
-        priordf <- prior_to_df(prior, rst)
-        dt[, p:= priordf$p[match(dt$rid, priordf$rid)]]
 
-        #setnames(dt, "pg", "p")
+        if (!("pga" %in% names(dt))) {
+            priordf <- prior_to_df(prior, rst)
+            dt[, p:= priordf$p[match(dt$rid, priordf$rid)]]
 
-        dt <- calculate_posterior(prior, dt, rst)
-        #dt <- calculate_mobloc(dt, timing.advance = !is.na(ta), param = param)
+            #setnames(dt, "pg", "p")
 
-        if (!is.na(ta)) {
-            dt <- update_posterior_TA(dt, raster = rst, cp = cpsel, param = param)[TA==ta, ]
+            dt <- calculate_posterior(prior, dt, rst)
+            #dt <- calculate_mobloc(dt, timing.advance = !is.na(ta), param = param)
+
+            if (!is.na(ta)) {
+                dt <- update_posterior_TA(dt, raster = rst, cp = cpsel, param = param)[TA==ta, ]
+            }
         }
+
         setnames(dt, "pga", "x")
 
 
