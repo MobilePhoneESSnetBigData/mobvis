@@ -12,18 +12,20 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  fig.width=6, 
+  fig.height=3,
   comment = "#>"
 )
 ```
 
-The mobloc package is used to approximate geographic location given the connection between a mobile device and the cell (an antenna may contain multiple cells). This is done by a physical model of signal strength and a Baysian method to calculate the probability per geographic location (for computational reasons grouped by grid tiles) given a certain prior (i.e. the prior change of connection, e.g. based on land use) and a certain likelihood, which is the probability of connection to a certain cell given the geographic location, which takes into account the probability of connection to other nearby cells and the modeled signal strength. These methods are described in detail in [1]. The implementation is described in the documentation of the mobloc package [2].
+The mobloc package is used to approximate geographic location given the connection between a mobile device and the cell (an antenna may contain multiple cells). This is done by a physical model of signal strength and a Baysian method to calculate the probability per geographic location (for computational reasons grouped by grid tiles) given a certain prior (i.e. the prior change of connection, e.g. based on land use) and a certain likelihood (called connection likelihood in [1] and event location in [3]), which is the probability of connection to a certain cell given the geographic location, which takes into account the probability of connection to other nearby cells and the modeled signal strength. These methods are described in detail in [1]. The implementation is described in the documentation of the mobloc package [2].
 
 
 ## Example data from mobloc
 
-The mobloc package contains fictional data of a cellplan, which contains the locations and physical properties of the cells from a certain MNO. The cells are ficionally placed in the region of Zuid-Limburg, which is NUTS region NL423.
+The mobloc package contains fictional **cellplan** dataset called `ZL_cellplan`. A cellplan is a dataset that contains the locations and physical properties of the cells from a certain MNO. The cells in `ZL_cellplan` are fictionally placed in the region of Zuid-Limburg, which is NUTS region NL423. Besides the cellplan, other datasets that are contained in mobloc are the municipality polygons for Zuid-Limburg `ZL_muni`, the elevation data `ZL_elevation`, and land use data `ZL_landuse`. 
 
-The example data consists of a fictional cellplan, `ZL_cellplan`, the municipality polygons `ZL_muni`, the elevation data `ZL_elevation`, and land use data `ZL_landuse`.
+These datasets area loaded as follows.
 
 
 ```{r}
@@ -31,9 +33,13 @@ library(mobloc)
 data("ZL_cellplan", "ZL_muni", "ZL_elevation", "ZL_landuse")
 ```
 
+`ZL_cellplan` and `ZL_muni` are **sf** [4] objects of points and polygons respectively. The objects `ZL_elevation` and `ZL_landuse` are **raster** [5] objects.
 
 
 ## Processing mobloc data
+
+The following code processes these input datasets. 
+
 
 ```{r}
 # set parameters
@@ -55,7 +61,7 @@ ZL_raster <- create_raster(ZL_bbox)
 ZL_strength <- compute_sig_strength(cp = ZL_cellplan, raster = ZL_raster,
     elevation = ZL_elevation, param = ZL_param)
 
-# create likelihoods
+# create likelihoods (event locations)
 ZL_strength_llh <- create_strength_llh(ZL_strength, param = ZL_param)
 ZL_voronoi_llh <- create_voronoi_llh(ZL_cellplan, ZL_raster)
 
@@ -63,7 +69,16 @@ ZL_voronoi_llh <- create_voronoi_llh(ZL_cellplan, ZL_raster)
 ZL_uniform_prior <- create_uniform_prior(ZL_raster)
 ZL_network_prior <- create_network_prior(ZL_strength, ZL_raster)
 ZL_landuse_prior <- create_prior(ZL_landuse, weights = c(1, 1, .1, 0, .5))
+
+# create composite prior: half network, half lansuse
+ZL_composite_prior <- create_prior(ZL_network_prior, ZL_landuse_prior, weights = c(0.5, 0.5))
+
+# caculate the posterior distributions
+ZL_posterior <- mobloc::calculate_posterior(prior = ZL_composite_prior, llh = ZL_strength_llh, raster = ZL_raster)
 ```
+
+This code is explained in the documentation of the **mobloc** package.
+
 
 ## Mobloc dashboards
 
@@ -77,6 +92,9 @@ The first dashboard examines the parameters used in mobloc. It can be started wi
 setup_sig_strength_model()
 ```
 
+<img src="images/setup_signal_strength.jpg" alt="" data-toggle="tooltip" data-placement="right" title="" data-original-title="" onload="$(this).tooltip()" width="700">
+
+
 The dashboard that examines the processed data from mobloc can be called as follows:
 
 ```{r, eval=FALSE}
@@ -86,6 +104,9 @@ explore_mobloc(ZL_cellplan, ZL_raster, ZL_strength,
                list(Strength = ZL_strength_llh, Voronoi = ZL_voronoi_llh),
                param = ZL_param)
 ```
+
+<img src="images/explore_mobloc.jpg" alt="" data-toggle="tooltip" data-placement="right" title="" data-original-title="" onload="$(this).tooltip()" width="700">
+
 
 The individual plot functions will be discussed in the sections below.
 
@@ -119,17 +140,25 @@ radiation_plot(type = "e", beam_width = 10, db_back = -30)
 ### Analyse results
 
 ```{r}
-map_sig_strength(rst = ZL_raster, dt = ZL_strength, cp = ZL_cellplan, cells = "BEE_150_N1", region = ZL_muni, type = "s", interactive = FALSE)
+map_sig_strength(rst = ZL_raster, 
+                 dt = ZL_strength, 
+                 cp = ZL_cellplan, 
+                 cells = "BEE_150_N1", 
+                 region = ZL_muni, 
+                 type = "s", 
+                 interactive = FALSE, 
+                 settings = mobvis_settings_static())
 ```
 
 ```{r}
-settings <- mobvis_settings()
-settings$cell_colors <- "black"
-settings$cell_colors <- "black"
-settings$cell_legend <- FALSE
-settings$use_classes <- FALSE
-
-map_sig_strength(rst = ZL_raster, dt = ZL_strength, cp = ZL_cellplan, cells = "BEE_150_N1", region = ZL_muni, type = "s", interactive = FALSE, settings = settings)
+map_sig_strength(rst = ZL_raster, 
+                 dt = ZL_strength, 
+                 cp = ZL_cellplan, 
+                 cells = "BEE_150_N1", 
+                 region = ZL_muni, 
+                 type = "dBm", 
+                 interactive = FALSE, 
+                 settings = mobvis_settings_static())
 ```
 
 
@@ -139,4 +168,6 @@ map_sig_strength(rst = ZL_raster, dt = ZL_strength, cp = ZL_cellplan, cells = "B
 
 1. Tennekes, Gootzen, Y.A.P.M., Shah, S.H. (2020) A Bayesian approach to location estimation of mobile devices from mobile network operator data, working paper, Statistics Netherlands, Heerlen.
 2. Tennekes, M. (2020) mobloc: mobile location algorithms and tools, R-package
-
+3. Salgado, D. et al. (2018) Proposed elements for a methodological framework for the production of official statistics with Mobile Phone Data, ESSnet Big Data, WP5, Deliverable 5.3, Eurostat.
+4. Pebesma, E., 2018. Simple Features for R: Standardized Support for Spatial Vector Data. The R Journal 10 (1), 439-446, https://doi.org/10.32614/RJ-2018-009
+5. Robert J. Hijmans (2020). raster: Geographic Data Analysis and Modeling. R package version 3.3-13. https://CRAN.R-project.org/package=raster

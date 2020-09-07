@@ -29,22 +29,22 @@ get_epsg_tiles <- function(map, epsg) {
 }
 
 
-base_map <- function(cp, offset, epsg) {
-    cp2 <- move_cells_into_prop_direction(cp, offset)
-    cp_lines <- create_connection_lines(cp, cp2)
+# base_map <- function(cp, offset, epsg) {
+#     cp2 <- move_cells_into_prop_direction(cp, offset)
+#     cp_lines <- create_connection_lines(cp, cp2)
+#
+#     lf <- leaflet(options = leafletOptions(crs = get_leafletCRS(epsg))) %>%
+#         addPolylines(data = cp_lines %>% st_transform(crs = 4326), color = "#777777", opacity = 1, weight = 3, group = "Cell locations") %>%
+#         get_epsg_tiles(epsg)
+#
+# }
 
-    lf <- leaflet(options = leafletOptions(crs = get_leafletCRS(epsg))) %>%
-        addPolylines(data = cp_lines %>% st_transform(crs = 4326), color = "#777777", opacity = 1, weight = 3, group = "Cell locations") %>%
-        get_epsg_tiles(epsg)
-
-}
-
-base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap", cells = character(), settings = mobvis_settings()) {
+base_tmap <- function(cp, borders = NULL, basemaps = "OpenStreetMap", cells = character(), settings = mobvis_settings()) {
     cp$sel = factor(ifelse(cp$cell %in% cells, "Selected",
                     ifelse(cp$small, "Small cell", "Normal cell")), levels = c("Selected", "Small cell", "Normal cell"))
     cp = cp[, c("sel", "small", "direction", "x", "y", "cell")]
 
-    cp2 <- move_cells_into_prop_direction(cp, offset)
+    cp2 <- move_cells_into_prop_direction(cp, settings$cell_offset)
     cp_lines <- create_connection_lines(cp, cp2)
 
     if (is.na(basemaps[1])) {
@@ -59,19 +59,20 @@ base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap"
     cell_palette = settings$cell_colors
     cell_legend = settings$cell_legend
 
-    if (offset > 0) {
+
+    if (settings$cell_offset > 0) {
         tm <- tm + tm_shape(cp_lines) +
             tm_lines(col = "#777777", lwd = 3, group = "Cell locations", interactive = FALSE, zindex = 401) +
             tm_shape(cp2) +
-            tm_dots("sel", palette = cell_palette, size = .04, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 401, legend.show = cell_legend)
+            tm_dots("sel", palette = cell_palette, size = .04 * settings$cell_size, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
     } else {
         tm <- tm + tm_shape(cp) +
-            tm_dots("sel", palette = cell_palette, size = .04, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 401, legend.show = cell_legend)
+            tm_dots("sel", palette = cell_palette, size = .04 * settings$cell_size, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
     }
 
     if (!is.null(borders)) {
         #tm <- tm + tm_shape(borders) + tm_polygons(col = NA, border.col = "black", group = "Cell locations", interactive = FALSE, alpha = 0)
-        tm <- tm + tm_shape(borders, is.master = TRUE) + tm_borders(col = "black", group = "Cell locations", zindex = 402)
+        tm <- tm + tm_shape(borders, is.master = TRUE) + tm_borders(col = "black", group = "Cell locations", zindex = 403)
     }
     tm
 }
@@ -88,7 +89,6 @@ base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap"
 #' @param title title
 #' @param palette palette The default depends on \code{var}: \code{-Blues} (from ColorBrewer) for unspecified \code{var}, \code{-Greens} for \code{"pag"}, \code{-Blues} for \code{"pg"}, \code{viridis} for \code{"pga"}, \code{Set2} for \code{"bsm"}.
 #' @param cells cells to select
-#' @param offset offset of the cells. If not 0, the cells are moved into the propagation direction
 #' @param borders borders (polygon) of the region of interest
 #' @param interactive should the map be interactive or static?
 #' @param basemaps basemaps used in the interactive map
@@ -97,7 +97,7 @@ base_tmap <- function(cp, offset = 0, borders = NULL, basemaps = "OpenStreetMap"
 #' @param settings mobvis settings
 #' @import tmap
 #' @export
-map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), offset = 0, borders = NULL, interactive = TRUE, basemaps = "OpenStreetMap", opacity = 1, proxy = FALSE, settings = mobvis_settings()) {
+map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), borders = NULL, interactive = TRUE, basemaps = "OpenStreetMap", opacity = 1, proxy = FALSE, settings = mobvis_settings()) {
     # check required columns
     if (!all(c("cell", "small", "direction", "x", "y") %in% names(cp))) stop("cp does not contain all the required columns: cell, small, direction, x, and y")
 
@@ -108,7 +108,9 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
     # } else {
     #     tm <- base_tmap(cp = cp, offset = offset, borders = borders)
     # }
-    tm2 <- base_tmap(cp = cp, offset = offset,
+
+
+    tm2 <- base_tmap(cp = cp,
                      borders = if (proxy) NULL else borders,
                      basemaps = if (proxy) NA else basemaps, cells = cells, settings = settings)
 
@@ -215,10 +217,10 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
 
         if (var %in% c("dBm", "s") && settings$use_classes) {
             tm <- tm_shape(rst) +
-                tm_raster(names(rst)[1], palette = cls$colors, title = title, breaks = cls$breaks, labels = cls$labels, group = "Data", zindex = 404)
+                tm_raster(names(rst)[1], palette = cls$colors, alpha = opacity, title = title, breaks = cls$breaks, labels = cls$labels, group = "Data", zindex = 404)
         } else if (var != "empty") {
             tm <- tm_shape(rst) +
-                tm_raster(names(rst)[1], palette = palette, n = 7, stretch.palette = FALSE, title = title, group = "Data", zindex = 404)
+                tm_raster(names(rst)[1], palette = palette, alpha = opacity, n = 7, stretch.palette = FALSE, title = title, group = "Data", zindex = 404)
         }
 
     } else {
@@ -231,7 +233,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
 
     #browser()
     if (proxy) {
-        tmapProxy("map", x = tm_remove_layer(401) + tm_remove_layer(404) + tm2 + tm)
+        tmapProxy("map", x = tm_remove_layer(402) + tm_remove_layer(404) + tm2 + tm)
     } else {
         tm + tm2 + tm_layout(legend.outside = TRUE, frame = FALSE)
     }
@@ -239,150 +241,150 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
 
 
 
-viz_p <- function(cp, rst, var, trans, offset, rect, proxy = FALSE) {
-    #browser()
-
-    cp$sel <- factor(ifelse(cp$sel == 2, "Selected", ifelse(cp$small, "Small cell", "Normal cell")), levels = c("Selected", "Small cell", "Normal cell"))
-
-    cp = cp[, c("sel", "small", "direction", "x", "y", "cell")]
-
-    cp2 <- move_cells_into_prop_direction(cp, offset)
-    cp_lines <- create_connection_lines(cp, cp2)
-
-
-    pal <- colorFactor(c("red", "gray70", "gold"), levels = c("Selected", "Small cell", "Normal cell"))
-
-    if (all(is.na(rst[]))) var <- "empty"
-
-
-
-
-    cls <- if (var == "dBm")  {
-        dBm_classes
-    } else {
-        qty_classes
-    }
-
-    numpal <- ifelse(var %in% c("dBm", "s"), "Blues",
-                     ifelse(var == "pga", "viridis",
-                            ifelse(var == "pag", "Greens", "Blues")))
-
-    if (var %in% c("dBm", "s")) {
-        pal2 <- colorBin(cls$colors, bins = cls$breaks, na.color = "#00000000")#, dBm_classes$labels)
-        #rst2 <- raster::projectRaster(rst, crs = st_crs(4326)$proj4string)
-        rst2 <- rst
-    } else if (var == "bsm") {
-        rst2 <- raster::projectRaster(rst, crs = st_crs(3857)$proj4string, method = "ngb")
-        lvls <- raster::levels(rst)[[1]]
-        cols <- rep(RColorBrewer::brewer.pal(8, "Set2"), length.out = nrow(lvls))
-
-        bsm_sel <- which(cp$sel == "Selected")
-
-        cols[bsm_sel] <- rep(RColorBrewer::brewer.pal(8, "Dark2"), length.out = nrow(lvls))[bsm_sel]
-
-        if (length(na.omit(unique(rst2[])))==1) {
-            cols2 <- cols[bsm_sel]
-        } else {
-            cols2 <- cols
-        }
-        #pal2 <- colorFactor(palette = cols, domain = lvls$ID, na.color = "transparent")
-    } else if (var != "empty") {
-        rst2 <- raster::projectRaster(rst, crs = st_crs(4326)$proj4string, method = "bilinear")
-        if (any(is.nan(rst2[]))) {
-            rst2 <- raster::projectRaster(rst, crs = st_crs(4326)$proj4string, method = "ngb")
-        }
-
-        if (var == "pag") {
-            allOnes <- (min(rst2[], na.rm = TRUE) > .9)
-            if (allOnes) {
-                values <- pmin(pmax(rst2[], 0), 1)
-            } else {
-                values <- pmin(pmax(rst2[] * 1000, 0), 1000)
-            }
-        } else {
-            values <- pmin(pmax(rst2[] * 1000000, 0), 1000000)
-        }
-
-        rst2[] <- values
-        rng <- range(values, na.rm = TRUE)
-
-        var_as_discrete <- ((rng[2]- rng[1]) < 1e-9)
-
-        if (var_as_discrete) {
-            rng_value <- round(rng[1], 8)
-            rst2[!is.na(rst2[])] <- rng_value
-            cols2 <- if (numpal == c("viridis")) viridis::viridis(7)[4] else RColorBrewer::brewer.pal(7, numpal)[6]
-            labels2 <- format(rng_value)
-        } else {
-            pal2 <- colorNumeric(palette = numpal, rng, reverse = (numpal != "viridis"),
-                                 na.color = "transparent")
-        }
-
-
-
-    }
-
-
-
-    title <- switch(var,
-                    dBm = "Signal strength in dBm",
-                    s = "Signal dominance - s",
-                    bsm = "Best server map",
-                    #lu = "Land use prior (in %)",
-                    pag = paste0("Connection likelihood - P(a|g)", ifelse(allOnes, "", "<br>(in 1 / 1,000)")),
-                    pg = "Prior - P(g)<br>(in 1/1,000,000)",
-                    pga = "Location posterior - P(g|a)<br>(in 1/1,000,000)",
-                    "Unknown variable") #paste("Prior", pnames[var], " - P(g)<br>(in 1/1,000,000)")
-
-
-    if (proxy) {
-        lf <- leafletProxy("map") %>%
-            clearMarkers() %>%
-            clearImages() %>%
-            clearControls() %>%
-            clearShapes()
-    } else {
-        lf <- leaflet() %>%
-            addTiles()
-    }
-
-
-    if (offset > 0) {
-        lf <- lf %>%
-            addPolylines(data = cp_lines %>% st_transform(crs = 4326), color = "#777777", opacity = 1, weight = 3, group = "Cell locations") %>%
-            addCircleMarkers(data = cp2 %>% st_transform(crs = 4326), fillColor = ~pal(sel), color = "black", fillOpacity = 1, radius = 5, weight = 1, group = "Cell locations", layerId = ~cell)
-    } else {
-        lf <- lf %>%
-            addCircleMarkers(data = cp %>% st_transform(crs = 4326), fillColor = ~pal(sel), color = "black", fillOpacity = 1, radius = 5, weight = 1, group = "Cell locations", layerId = ~cell)
-    }
-
-
-    if (var %in% c("dBm", "s")) {
-        lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = pal2) %>%
-            leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>%
-            addLegend(colors = cls$colors, labels = cls$labels, opacity = trans, title = title)
-
-    } else if (var == "bsm") {
-        lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = cols2) %>%
-            leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>%
-            addLegend(colors = cols, labels = as.character(lvls$cell), opacity = trans, title = title)
-    } else if (var == "empty") {
-        lf <- lf %>% leaflet::addLayersControl(overlayGroups = c("Cell locations"), position = "topleft")
-    } else {
-
-
-        if (var_as_discrete) {
-            lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = cols2) %>%
-                leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>%
-                addLegend(colors = cols2, labels = labels2, opacity = trans, title = title)
-        } else {
-            lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = pal2) %>%
-                leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>% addLegend(pal = pal2, values = rng, opacity = trans, title = title)
-
-        }
-
-
-    }
-
-    lf %>% addPolygons(data = rect, color = "#000000", weight = 1, fill = FALSE)
-}
+# viz_p <- function(cp, rst, var, trans, offset, rect, proxy = FALSE) {
+#     #browser()
+#
+#     cp$sel <- factor(ifelse(cp$sel == 2, "Selected", ifelse(cp$small, "Small cell", "Normal cell")), levels = c("Selected", "Small cell", "Normal cell"))
+#
+#     cp = cp[, c("sel", "small", "direction", "x", "y", "cell")]
+#
+#     cp2 <- move_cells_into_prop_direction(cp, offset)
+#     cp_lines <- create_connection_lines(cp, cp2)
+#
+#
+#     pal <- colorFactor(c("red", "gray70", "gold"), levels = c("Selected", "Small cell", "Normal cell"))
+#
+#     if (all(is.na(rst[]))) var <- "empty"
+#
+#
+#
+#
+#     cls <- if (var == "dBm")  {
+#         dBm_classes
+#     } else {
+#         qty_classes
+#     }
+#
+#     numpal <- ifelse(var %in% c("dBm", "s"), "Blues",
+#                      ifelse(var == "pga", "viridis",
+#                             ifelse(var == "pag", "Greens", "Blues")))
+#
+#     if (var %in% c("dBm", "s")) {
+#         pal2 <- colorBin(cls$colors, bins = cls$breaks, na.color = "#00000000")#, dBm_classes$labels)
+#         #rst2 <- raster::projectRaster(rst, crs = st_crs(4326)$proj4string)
+#         rst2 <- rst
+#     } else if (var == "bsm") {
+#         rst2 <- raster::projectRaster(rst, crs = st_crs(3857)$proj4string, method = "ngb")
+#         lvls <- raster::levels(rst)[[1]]
+#         cols <- rep(RColorBrewer::brewer.pal(8, "Set2"), length.out = nrow(lvls))
+#
+#         bsm_sel <- which(cp$sel == "Selected")
+#
+#         cols[bsm_sel] <- rep(RColorBrewer::brewer.pal(8, "Dark2"), length.out = nrow(lvls))[bsm_sel]
+#
+#         if (length(na.omit(unique(rst2[])))==1) {
+#             cols2 <- cols[bsm_sel]
+#         } else {
+#             cols2 <- cols
+#         }
+#         #pal2 <- colorFactor(palette = cols, domain = lvls$ID, na.color = "transparent")
+#     } else if (var != "empty") {
+#         rst2 <- raster::projectRaster(rst, crs = st_crs(4326)$proj4string, method = "bilinear")
+#         if (any(is.nan(rst2[]))) {
+#             rst2 <- raster::projectRaster(rst, crs = st_crs(4326)$proj4string, method = "ngb")
+#         }
+#
+#         if (var == "pag") {
+#             allOnes <- (min(rst2[], na.rm = TRUE) > .9)
+#             if (allOnes) {
+#                 values <- pmin(pmax(rst2[], 0), 1)
+#             } else {
+#                 values <- pmin(pmax(rst2[] * 1000, 0), 1000)
+#             }
+#         } else {
+#             values <- pmin(pmax(rst2[] * 1000000, 0), 1000000)
+#         }
+#
+#         rst2[] <- values
+#         rng <- range(values, na.rm = TRUE)
+#
+#         var_as_discrete <- ((rng[2]- rng[1]) < 1e-9)
+#
+#         if (var_as_discrete) {
+#             rng_value <- round(rng[1], 8)
+#             rst2[!is.na(rst2[])] <- rng_value
+#             cols2 <- if (numpal == c("viridis")) viridis::viridis(7)[4] else RColorBrewer::brewer.pal(7, numpal)[6]
+#             labels2 <- format(rng_value)
+#         } else {
+#             pal2 <- colorNumeric(palette = numpal, rng, reverse = (numpal != "viridis"),
+#                                  na.color = "transparent")
+#         }
+#
+#
+#
+#     }
+#
+#
+#
+#     title <- switch(var,
+#                     dBm = "Signal strength in dBm",
+#                     s = "Signal dominance - s",
+#                     bsm = "Best server map",
+#                     #lu = "Land use prior (in %)",
+#                     pag = paste0("Connection likelihood - P(a|g)", ifelse(allOnes, "", "<br>(in 1 / 1,000)")),
+#                     pg = "Prior - P(g)<br>(in 1/1,000,000)",
+#                     pga = "Location posterior - P(g|a)<br>(in 1/1,000,000)",
+#                     "Unknown variable") #paste("Prior", pnames[var], " - P(g)<br>(in 1/1,000,000)")
+#
+#
+#     if (proxy) {
+#         lf <- leafletProxy("map") %>%
+#             clearMarkers() %>%
+#             clearImages() %>%
+#             clearControls() %>%
+#             clearShapes()
+#     } else {
+#         lf <- leaflet() %>%
+#             addTiles()
+#     }
+#
+#
+#     if (offset > 0) {
+#         lf <- lf %>%
+#             addPolylines(data = cp_lines %>% st_transform(crs = 4326), color = "#777777", opacity = 1, weight = 3, group = "Cell locations") %>%
+#             addCircleMarkers(data = cp2 %>% st_transform(crs = 4326), fillColor = ~pal(sel), color = "black", fillOpacity = 1, radius = 5, weight = 1, group = "Cell locations", layerId = ~cell)
+#     } else {
+#         lf <- lf %>%
+#             addCircleMarkers(data = cp %>% st_transform(crs = 4326), fillColor = ~pal(sel), color = "black", fillOpacity = 1, radius = 5, weight = 1, group = "Cell locations", layerId = ~cell)
+#     }
+#
+#
+#     if (var %in% c("dBm", "s")) {
+#         lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = pal2) %>%
+#             leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>%
+#             addLegend(colors = cls$colors, labels = cls$labels, opacity = trans, title = title)
+#
+#     } else if (var == "bsm") {
+#         lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = cols2) %>%
+#             leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>%
+#             addLegend(colors = cols, labels = as.character(lvls$cell), opacity = trans, title = title)
+#     } else if (var == "empty") {
+#         lf <- lf %>% leaflet::addLayersControl(overlayGroups = c("Cell locations"), position = "topleft")
+#     } else {
+#
+#
+#         if (var_as_discrete) {
+#             lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = cols2) %>%
+#                 leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>%
+#                 addLegend(colors = cols2, labels = labels2, opacity = trans, title = title)
+#         } else {
+#             lf <- lf %>% addRasterImage(x = rst2, opacity = trans, group = title, colors = pal2) %>%
+#                 leaflet::addLayersControl(overlayGroups = c("Cell locations", title), position = "topleft", options = layersControlOptions(collapsed = FALSE)) %>% addLegend(pal = pal2, values = rng, opacity = trans, title = title)
+#
+#         }
+#
+#
+#     }
+#
+#     lf %>% addPolygons(data = rect, color = "#000000", weight = 1, fill = FALSE)
+# }

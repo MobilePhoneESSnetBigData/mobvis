@@ -118,7 +118,6 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
         #best_server_map <- create_best_server_map(strength, raster) #bsm
     }
 
-    offset_value <- 150
 
 
     sliders <- mapply(function(i, nm) {
@@ -150,8 +149,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                                             h3("Map Setup"),
                                             radioButtons("show", "Selection",  c("All cells" = "grid", "Single cell" = "ant"), selected = "grid"),
                                             radioButtons("var", "Show", choices, selected = "none"),
-                                            sliderInput("trans", "Transparency", min = 0, max = 1, value = 1, step = 0.1),
-                                            checkboxInput("offset", "Move cells into propagation direction", value = TRUE)),
+                                            sliderInput("trans", "Transparency", min = 0, max = 1, value = 1, step = 0.1)),
                                      column(6,
                                             h3("Module Setup"),
                                             radioButtons("varP", "Location Prior", choices_prior, selected = "p1"),
@@ -271,7 +269,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
             output$map <- renderTmap({
                 #map_mob_cells(cp, rst, var = type, offset = ifelse(input$offset, offset_value, 0), borders = rect, proxy = FALSE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel)
 
-                base_tmap(cp, offset_value, rect, basemaps = "OpenStreetMap", settings)
+                base_tmap(cp, rect, basemaps = "OpenStreetMap", settings=settings)
             })
 
 
@@ -328,7 +326,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                 }
 
                 #viz_p(cp = cp, rst = rst, var = type, trans = input$trans, offset = ifelse(input$offset, offset_value, 0), rect = rect, proxy = TRUE)
-                map_mob_cells(cp, rst, var = type, offset = ifelse(input$offset, offset_value, 0), borders = rect, proxy = TRUE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel, settings = settings)
+                map_mob_cells(cp, rst, var = type, borders = rect, proxy = TRUE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel, settings = settings)
 
             })
 
@@ -380,7 +378,9 @@ create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel) {
     rindex <- raster::getValues(rst)
     r <- raster::raster(rst)
 
-    if (type == "dBm") {
+    if (type == "none") {
+        return(r)
+    } else if (type == "dBm") {
         dt[, x:= dBm]
     } else if (type == "s") {
         dt[, x:=s]

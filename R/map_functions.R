@@ -9,6 +9,7 @@
 #' @param region region
 #' @param type type
 #' @param interactive interactive
+#' @param settings settings
 #' @export
 map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dBm", "s"), interactive = TRUE, settings = mobvis_settings()) {
 
