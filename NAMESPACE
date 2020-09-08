@@ -2,6 +2,7 @@
 
 export(distance_plot)
 export(explore_mobloc)
+export(map_best_server)
 export(map_mob_cells)
 export(map_pag)
 export(map_pg)

@@ -31,6 +31,29 @@ map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("d
     map_mob_cells(cp, p, var = type, borders = region, cells = cells_highlight, interactive = interactive, settings = settings)
 }
 
+#' @rdname map_functions
+#' @name map_bast_server
+#' @export
+map_best_server <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dBm", "s"), interactive = TRUE, settings = mobvis_settings()) {
+
+    cells_highlight <- if (is.na(cells[1])) character() else cells
+
+    if (is.na(cells[1])) cells <- dt$cell
+
+    dt[, cell:=as.factor(cell)]
+    dt[, pag:=dBm]
+    bsm <- mobloc::create_best_server_map(dt, rst)
+
+
+    if (is.null(region)) {
+        region <- create_bbx_rect(raster2bbx(rst))
+    }
+
+    map_mob_cells(cp, bsm, var = type, borders = region, cells = cells_highlight, interactive = interactive, settings = settings)
+}
+
+
+
 
 #' @rdname map_functions
 #' @name map_pg

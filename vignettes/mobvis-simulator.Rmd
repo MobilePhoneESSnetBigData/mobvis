@@ -10,8 +10,11 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+library(mobvis)
 knitr::opts_chunk$set(
     collapse = TRUE,
+    fig.width=6, 
+    fig.height=4,
     comment = "#>"
 )
 ```
@@ -20,20 +23,21 @@ The simulator software is a framework to run mobile network data micro-simulatio
 
 ## Example data from the simulator
 
-The example data is contained in this package as a zip file. It can be retrieved and extracted as follows.
+Example data for the simulator, both the input and the output files, are contained in this package as a single zip file. It can be retrieved and extracted as follows.
 
 ```{r}
-library(mobvis)
-zipfile <- system.file("sim", "simdata.zip", package="mobvis")
-
+# specify folder for the simulator files
 dir <- "simdata"
 if (!dir.exists(dir)) dir.create(dir, recursive = TRUE) else unlink(dir, recursive = TRUE)
+
+# unzip the zip file into that folder 
+zipfile <- system.file("sim", "simdata.zip", package = "mobvis")
 unzip(zipfile, exdir = dir)
 ```
 
-The input files are contained in the root folder (in this case `"simdata"`), and the output files in the `"output"` subfolder.
+In this case, the files will be located in the `"simdata"` subfolder of the working directory. The input files are stored in that folder, and the output files in the subfolder `"simdata/output"`.
 
-In order to use this simulator data in R, we have to create a list object.
+In order to use this simulator data in **mobvis**, we have to create a list object that contains a few settings.
 
 ```{r}
 sim <- list(input_dir = "simdata",
@@ -42,46 +46,89 @@ sim <- list(input_dir = "simdata",
             crs = sf::st_crs("+proj=aeqd +lat_0=16.06 +lon_0=-22.85 +x_0=0 +y_0=0"))
 ```
 
-Besides the input and output directories, it also contains a crs (coordinate reference system), which is needed to create interactive maps.
+Besides the input and output directories, it also contains the MNO name, in this case `"MNO1"`, and a CRS (coordinate reference system). The latter can be used to is needed to 
+
+it also contains a crs (coordinate reference system), which is needed to create interactive maps.
 Since this data is fictional, the crs is centered on Boa Vista, a small island in the Atlantic Ocean.
 
 
 ## Signal strength
 
-```{r, fig.show="hold", out.width="40%"}
+```{r, fig.show="hold", out.width="80%"}
 rst <- sim_get_raster(sim)
 cp <- sim_get_cellplan(sim)
 region <- sim_get_region(sim)
 strength <- sim_get_signal_strength(sim, rst, cp)
 
-map_sig_strength(rst, dt = strength, cp = cp, region = region, cells = 3, type = "dBm", interactive = FALSE)
-map_sig_strength(rst, dt = strength, cp = cp, region = region, cells = 3, type = "s", interactive = FALSE)
+map_sig_strength(rst, 
+                 dt = strength, 
+                 cp = cp, 
+                 region = region, 
+                 cells = 3, 
+                 type = "dBm", 
+                 interactive = FALSE, 
+                 settings = mobvis_settings_static(cell_size = 1, cell_offset = 75,
+                                                   cell_labels = TRUE))
+map_sig_strength(rst, 
+                 dt = strength, 
+                 cp = cp, 
+                 region = region, 
+                 cells = 3, 
+                 type = "s", 
+                 interactive = FALSE, 
+                 settings = mobvis_settings_static(cell_colors = "gold", 
+                                                   cell_size = 1, 
+                                                   cell_offset = 75,
+                                                   cell_labels = TRUE, 
+                                                   cell_label_color = "white"))
+map_best_server(rst = rst,
+                dt = strength,
+                cp = cp,
+                region = region,
+                cells = 3,
+                type = "bsm",
+                interactive = FALSE,
+                settings = mobvis_settings_static(cell_colors = "black", 
+                                                  cell_size = 1, 
+                                                  cell_offset = 75,
+                                                  cell_labels = TRUE, 
+                                                  cell_label_color = "black"))
+
+
 ```
 
 
 ## Event location
 
-The following function 
+The following function visualizes the event location.
 
 ```{r}
+# Calculate the event location (likelihood) probabilities using mobloc
+library(mobloc)
 param <- mobloc_param()
 strength[, dist:= NA]
 strength_llh <- create_strength_llh(strength, param = param)
 
-settings = mobvis_settings()
+# Edit the visualization settings
+settings = mobvis_settings_static(cell_size = 2)
 settings$cell_colors["Normal cell"] <- "black"
+settings$titles["pag"] <- "Event location"
 
-map_pag(rst, dt = strength_llh, cp = cp, region = region, cells = 3, interactive = FALSE, settings = settings)
-
+# Create the plot
+map_pag(rst, 
+        dt = strength_llh, 
+        cp = cp, 
+        region = region, 
+        cells = 3, 
+        interactive = FALSE, 
+        settings = settings)
 ```
 
-
-## 
 
 
 
 
 ## References
 
-1. Reference
+1. To do: add reference simulator documentation 
 

@@ -38,18 +38,6 @@ prior_to_df <- function(prior, raster) {
 #' @export
 explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filter = NULL, coverage_map_dBm = NULL, coverage_map_s = NULL, best_server_map = NULL, settings = mobvis_settings()) {
 
-    crs <- st_crs(raster)
-
-
-    epsg <- 4326
-    # Note: background maps are available for EPSG 3035, but raster images do not work (see https://github.com/rstudio/leaflet/issues/610)
-#     epsg <- if(crs$proj4string == "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")  {
-#         3035
-#     } else {
-#         4326
-#     }
-
-
 
     if (!missing(filter)) {
 
