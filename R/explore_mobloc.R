@@ -28,11 +28,13 @@ prior_to_df <- function(prior, raster) {
 #' @note Note that duo to the reprojection of the raster to the web mercator projection (for interactive maps), the visualized raster does not correspond exactly to the output raster.
 #' @import shiny
 #' @importFrom shinyjs useShinyjs disable
-#' @import leaflet
+#' @import tmap
 #' @import sf
+#' @importFrom dplyr rename select filter mutate left_join
+#' @importFrom tidyr unnest_wider unnest pivot_longer
+#' @import readr
 #' @importFrom raster raster setValues brick extent crop extract coordinates
 #' @import data.table
-#' @importFrom graphics plot.new xspline
 #' @example ./examples/explore_mobloc.R
 #' @seealso \href{../doc/mobloc.html}{\code{vignette("mobloc")}}
 #' @export

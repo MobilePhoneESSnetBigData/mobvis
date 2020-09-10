@@ -1,6 +1,6 @@
 #' Settings of mobvis
 #'
-#' Settings of mobvis
+#' Settings of mobvis. The default values of \code{mobvis_settings} are aimed for interactive maps, whereas the values for \code{mobvis_settings_static} are aimed for statis maps.
 #'
 #' @param titles default titles. Named character vector, where the names should be dBm, s, bsm, pag, pg and pga.
 #' @param palettes default palettes. Should be a list with the elements called: dBm, s, bsm, pag, pg and pga.
@@ -9,6 +9,9 @@
 #' @param cell_size size of the cell
 #' @param cell_offset offset of the cells. If not 0, the cells are moved into the propagation direction
 #' @param cell_legend should the legend for the different cells be included?
+#' @param cell_labels logical that determines whether the cell labels are printed (default \code{FALSE})
+#' @param cell_label color of the cell labels
+#' @param region.lwd line width of the region borders
 #' @param use_classes logical that determines whether the signal strength (dBm) and dominance (s) should be plot in classes (default) or using a sequential palette. The classes are defined by dBm_classes and s_classes
 #' @param dBm_classes list that defines the classes for the signal strength
 #' @param s_classes list that defines the classes for the signal dominance
@@ -33,10 +36,15 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
                          palette = "-Blues",
                          cell_colors = c("Selected" = "red", "Small cell" = "goldenrod3", "Normal cell" = "gold"),
                          cell_size = .5,
+                         cell_shape = 19,
                          cell_offset = 150,
                          cell_legend = length(cell_colors) > 1,
                          cell_labels = FALSE,
                          cell_label_color = "black",
+                         region.lwd = 2,
+                         dev_size = .5,
+                         dev_color = "purple",
+                         dev_shape = 15,
                          use_classes = TRUE,
                          dBm_classes = list(breaks = c(-Inf, seq(-120, -70, by = 10), Inf),
                                              labels = c("-120 or less", "-120 to -110", "-110 to -100",
@@ -56,9 +64,12 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
 #' @rdname mobvis_settings
 mobvis_settings_static <- function(cell_colors = c("Selected" = "red", "Small cell" = "black", "Normal cell" = "black"),
                                    cell_size = .5,
-                                   cell_offset = 0,
+                                   cell_offset = 75,
                                    cell_legend = FALSE,
+                                   dev_size = .5,
+                                   dev_color = "purple",
+                                   region.lwd = 3,
                                    ...) {
-    do.call(mobvis_settings, c(list(cell_colors = cell_colors, cell_size = cell_size, cell_offset = cell_offset, cell_legend = cell_legend), list(...)))
+    do.call(mobvis_settings, c(list(cell_colors = cell_colors, cell_size = cell_size, cell_offset = cell_offset, cell_legend = cell_legend, dev_size = dev_size, dev_color = dev_color, region.lwd = region.lwd), list(...)))
 }
 

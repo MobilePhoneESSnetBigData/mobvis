@@ -10,13 +10,19 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-library(mobvis)
 knitr::opts_chunk$set(
     collapse = TRUE,
     fig.width=6, 
     fig.height=4,
     comment = "#>"
 )
+```
+
+
+```{r}
+library(mobvis)
+library(tmap)
+tmap_options(show.warnings = FALSE)
 ```
 
 The simulator software is a framework to run mobile network data micro-simulations [1]
@@ -43,10 +49,11 @@ In order to use this simulator data in **mobvis**, we have to create a list obje
 sim <- list(input_dir = "simdata",
             output_dir = "simdata/output",
             mno = "MNO1",
-            crs = sf::st_crs("+proj=aeqd +lat_0=16.06 +lon_0=-22.85 +x_0=0 +y_0=0"))
+            crs = st_crs(NA))
 ```
 
-Besides the input and output directories, it also contains the MNO name, in this case `"MNO1"`, and a CRS (coordinate reference system). The latter can be used to is needed to 
+Besides the input and output directories, it also contains the MNO name, in this case `"MNO1"`, and a CRS (coordinate reference system). The latter is needed
+
 
 it also contains a crs (coordinate reference system), which is needed to create interactive maps.
 Since this data is fictional, the crs is centered on Boa Vista, a small island in the Atlantic Ocean.
@@ -67,7 +74,7 @@ map_sig_strength(rst,
                  cells = 3, 
                  type = "dBm", 
                  interactive = FALSE, 
-                 settings = mobvis_settings_static(cell_size = 1, cell_offset = 75,
+                 settings = mobvis_settings_static(cell_size = 1,
                                                    cell_labels = TRUE))
 map_sig_strength(rst, 
                  dt = strength, 
@@ -78,7 +85,6 @@ map_sig_strength(rst,
                  interactive = FALSE, 
                  settings = mobvis_settings_static(cell_colors = "gold", 
                                                    cell_size = 1, 
-                                                   cell_offset = 75,
                                                    cell_labels = TRUE, 
                                                    cell_label_color = "white"))
 map_best_server(rst = rst,
@@ -90,11 +96,8 @@ map_best_server(rst = rst,
                 interactive = FALSE,
                 settings = mobvis_settings_static(cell_colors = "black", 
                                                   cell_size = 1, 
-                                                  cell_offset = 75,
                                                   cell_labels = TRUE, 
                                                   cell_label_color = "black"))
-
-
 ```
 
 
@@ -110,8 +113,7 @@ strength[, dist:= NA]
 strength_llh <- create_strength_llh(strength, param = param)
 
 # Edit the visualization settings
-settings = mobvis_settings_static(cell_size = 2)
-settings$cell_colors["Normal cell"] <- "black"
+settings = mobvis_settings_static(cell_size = 2, dev_size = 2)
 settings$titles["pag"] <- "Event location"
 
 # Create the plot
@@ -123,6 +125,83 @@ map_pag(rst,
         interactive = FALSE, 
         settings = settings)
 ```
+
+
+## Posterior probabilities
+
+```{r}
+network_prior <- create_network_prior(strength, rst)
+posterior <- calculate_posterior(prior = network_prior, llh = strength_llh, raster = rst)
+
+# Edit settings
+settings$titles["pga"] <- "Posterior probabilities"
+
+# Create the plot
+map_pga(rst, 
+        dt = posterior, 
+        cp = cp, 
+        region = region, 
+        cells = 3, 
+        interactive = FALSE, 
+        settings = settings)
+
+```
+
+
+## Trajectories
+
+The simulator simulates trajectories of devices. The following code retrieves the routes and calculates the traveled distance per device.
+
+
+```{r}
+# get route and distance per device
+routes <- sim_get_trajectory_routes(sim)
+print(routes)
+
+# plot the routes with tmap (run tmap_mode("view") to show it interactively)
+qtm(region) + qtm(routes)
+```
+
+Interactive exploratin of this map allows us to focus on particular devices that are interesting for further analysis. For instance, the route of device 250 is interesting, since it moved at a steady pace and direction in an area with a high density of cells, including one atenna that contains three directional cells.
+
+
+```{r}
+traj <- sim_get_trajectory_data(sim, device = 250)
+
+maps_event_loc <- lapply(1:nrow(traj), function(i) {
+    ti = traj[i,]
+    llhi = strength_llh[cell==ti$cell, ]
+    map_pag(rst, 
+            dt = llhi, 
+            cp = cp, 
+            region = region, 
+            cells = ti$cell, 
+            dev = ti,
+            interactive = FALSE, 
+            settings = settings)
+})
+
+tmap_animation(maps_event_loc, filename = "event_locations_dev_250.mp4", width = 700, height = 700, fps = 3)
+```
+
+```{r}
+maps_post = lapply(1:nrow(traj), function(i) {
+    ti = traj[i,]
+    posti = posterior[cell==ti$cell, ]
+    map_pga(rst, 
+            dt = posti, 
+            cp = cp, 
+            region = region, 
+            cells = ti$cell, 
+            dev = ti,
+            interactive = FALSE, 
+            settings = settings)
+})
+
+tmap_animation(maps_post, filename = "posterior_dev_250.mp4", width = 700, height = 700, fps = 3)
+```
+
+
 
 
 

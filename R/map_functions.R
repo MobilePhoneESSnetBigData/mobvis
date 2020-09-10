@@ -13,7 +13,7 @@
 #' @rdname map_functions
 #' @name map_sig_strength
 #' @export
-map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dBm", "s"), interactive = TRUE, settings = mobvis_settings()) {
+map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, type = c("dBm", "s"), interactive = TRUE, settings = mobvis_settings()) {
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
 
@@ -28,13 +28,13 @@ map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("d
         region <- create_bbx_rect(raster2bbx(rst))
     }
 
-    map_mob_cells(cp, p, var = type, borders = region, cells = cells_highlight, interactive = interactive, settings = settings)
+    map_mob_cells(cp, p, var = type, region = region, cells = cells_highlight, dev = dev, interactive = interactive, settings = settings)
 }
 
 #' @rdname map_functions
 #' @name map_bast_server
 #' @export
-map_best_server <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dBm", "s"), interactive = TRUE, settings = mobvis_settings()) {
+map_best_server <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, type = c("dBm", "s"), interactive = TRUE, settings = mobvis_settings()) {
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
 
@@ -49,7 +49,7 @@ map_best_server <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dB
         region <- create_bbx_rect(raster2bbx(rst))
     }
 
-    map_mob_cells(cp, bsm, var = type, borders = region, cells = cells_highlight, interactive = interactive, settings = settings)
+    map_mob_cells(cp, bsm, var = type, region = region, cells = cells_highlight, dev = dev, interactive = interactive, settings = settings)
 }
 
 
@@ -58,20 +58,20 @@ map_best_server <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dB
 #' @rdname map_functions
 #' @name map_pg
 #' @export
-map_pg <- function(rst, cp, region = NULL, interactive = TRUE, settings = mobvis_settings()) {
+map_pg <- function(rst, cp, region = NULL, dev = NULL, interactive = TRUE, settings = mobvis_settings()) {
     type <- "pag"
     p = rst
     if (is.null(region)) {
         region <- create_bbx_rect(raster2bbx(rst))
     }
-    map_mob_cells(cp, p, var = type, borders = region, interactive = interactive, settings = settings)
+    map_mob_cells(cp, p, var = type, region = region, dev = dev, interactive = interactive, settings = settings)
 }
 
 
 #' @rdname map_functions
 #' @name map_pag
 #' @export
-map_pag <- function(rst, dt, cp, cells = NA, region = NULL, interactive = TRUE, settings = mobvis_settings()) {
+map_pag <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interactive = TRUE, settings = mobvis_settings()) {
     type <- "pag"
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
@@ -86,14 +86,14 @@ map_pag <- function(rst, dt, cp, cells = NA, region = NULL, interactive = TRUE, 
         region <- create_bbx_rect(raster2bbx(rst))
     }
 
-    map_mob_cells(cp, p, var = type, borders = region, cells = cells_highlight, interactive = interactive, settings = settings)
+    map_mob_cells(cp, p, var = type, region = region, cells = cells_highlight, dev = dev, interactive = interactive, settings = settings)
 }
 
 
 #' @rdname map_functions
 #' @name map_pga
 #' @export
-map_pga <- function(rst, dt, cp, cells = NA, region = NULL, interactive = TRUE, settings = mobvis_settings()) {
+map_pga <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interactive = TRUE, settings = mobvis_settings()) {
     type <- "pga"
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
@@ -108,6 +108,6 @@ map_pga <- function(rst, dt, cp, cells = NA, region = NULL, interactive = TRUE, 
         region <- create_bbx_rect(raster2bbx(rst))
     }
 
-    map_mob_cells(cp, p, var = type, borders = region, cells = cells_highlight, interactive = interactive, settings = settings)
+    map_mob_cells(cp, p, var = type, region = region, cells = cells_highlight, dev = dev, interactive = interactive, settings = settings)
 }
 

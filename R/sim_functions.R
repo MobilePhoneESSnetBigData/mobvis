@@ -10,7 +10,7 @@
 #' @rdname sim_data
 sim_get_region <- function(sim) {
     x <- st_as_sfc(readLines(file.path(sim$input_dir, "map.wkt")))
-    if (is.na(st_crs(x))) {
+    if (is.na(st_crs(x)) && !is.na(st_crs(sim$crs))) {
         st_crs(x) <- sim$crs
     }
     x
@@ -30,7 +30,7 @@ sim_get_raster <- function(sim) {
 
     rst[] = 0:(length(rst)-1)
     rst = raster::flip(rst, "y")
-    if (is.na(raster::crs(rst))) {
+    if (is.na(raster::crs(rst)) && !is.na(st_crs(sim$crs))) {
         raster::crs(rst) <- sim$crs$input
     }
     rst
@@ -61,7 +61,7 @@ sim_get_cellplan <- function(sim) {
 #' @rdname sim_data
 #' @export
 sim_get_signal_strength <- function(sim, rst, cp) {
-    x <- readr::read_csv(file.path(sim$output_dir, "SignalMeasure_MNO1.csv")) %>%
+    x <- readr::read_csv(file.path(sim$output_dir, paste0("SignalMeasure_", sim$mno, ".csv"))) %>%
         dplyr::rename(cell = "Antenna ID") %>%
         tidyr::pivot_longer(-cell, names_to = "rid", values_to = "dBm") %>%
         dplyr::mutate(rid = as.integer(substr(rid, 5, nchar(rid)))) %>%
@@ -72,7 +72,60 @@ sim_get_signal_strength <- function(sim, rst, cp) {
 }
 
 
-# sim_get_antenna_info <- function(sim, rst, cp) {
-#     cp
-# }
+sim_get_trajectory_data <- function(sim, device = NULL) {
+    f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
+    x <- readr::read_csv(f)
+
+    if (is.null(device)) {
+        device <- unique(x$`Device ID`)
+    } else {
+        if (!(all(device %in% x$`Device ID`))) stop("Device ID(s) not found in ", f)
+    }
+
+    x %>%
+        dplyr::rename(cell = 2, event = 3, dev = 4, tile = 7) %>%
+        dplyr::select(t, cell, dev, x, y) %>%
+        dplyr::filter(dev == device) %>%
+        st_as_sf(coords = c("x", "y"), crs = sim$crs)
+}
+
+sim_get_trajectory_routes <- function(sim, device = NULL) {
+    f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
+    x <- readr::read_csv(f) %>%
+        dplyr::rename(cell = 2, event = 3, dev = 4, tile = 7) %>%
+        dplyr::select(t, cell, dev, x, y)
+
+    if (is.null(device)) {
+        device <- unique(x$dev)
+    } else {
+        if (!(all(device %in% x$dev))) stop("Device ID(s) not found in ", f)
+    }
+
+    dists <- lapply(device, function(d) {
+        xd <- x %>%
+            filter(dev == d)
+        st_linestring(as.matrix(xd[,c("x", "y")]))
+    })
+
+    sfc <- st_sfc(dists, crs = sim$crs)
+    y <- st_sf(dev = devs, geometry = sfc)
+
+    y$distance <- sf::st_length(y)
+    y
+}
+
+sim_devices_at_t <- function(sim, t) {
+    f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
+    x <- readr::read_csv(f)
+
+    if (!(t %in% x$t)) stop("No records found for t = ", t, " in ", f)
+
+    x %>%
+        dplyr::rename(time = 1, cell = 2, event = 3, dev = 4, tile = 7) %>%
+        dplyr::select(time, cell, dev, x, y) %>%
+        dplyr::filter(time == t) %>%
+        dplyr::rename(t = time) %>%
+        st_as_sf(coords = c("x", "y"), crs = sim$crs)
+}
+
 

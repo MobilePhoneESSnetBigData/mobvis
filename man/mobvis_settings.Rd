@@ -17,6 +17,9 @@ mobvis_settings(
   cell_size = 0.5,
   cell_offset = 150,
   cell_legend = length(cell_colors) > 1,
+  cell_labels = FALSE,
+  cell_label_color = "black",
+  region.lwd = 2,
   use_classes = TRUE,
   dBm_classes = list(breaks = c(-Inf, seq(-120, -70, by = 10), Inf), labels =
     c("-120 or less", "-120 to -110", "-110 to -100", "-100 to -90", "-90 to -80",
@@ -32,6 +35,7 @@ mobvis_settings_static(
   cell_size = 0.5,
   cell_offset = 0,
   cell_legend = FALSE,
+  region.lwd = 3,
   ...
 )
 }
@@ -59,5 +63,5 @@ mobvis_settings_static(
 \item{...}{passed on to mobvis_settings}
 }
 \description{
-Settings of mobvis
+Settings of mobvis. The default values of \code{mobvis_settings} are aimed for interactive maps, whereas the values for \code{mobvis_settings_static} are aimed for statis maps.
 }

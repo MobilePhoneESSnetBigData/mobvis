@@ -10,7 +10,7 @@ create_connection_lines <- function(cp1, cp2) {
 }
 
 
-base_tmap <- function(cp, borders = NULL, basemaps = "OpenStreetMap", cells = character(), settings = mobvis_settings()) {
+base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = character(), dev  = NULL, settings = mobvis_settings()) {
     cp$sel = factor(ifelse(cp$cell %in% cells, "Selected",
                     ifelse(cp$small, "Small cell", "Normal cell")), levels = c("Selected", "Small cell", "Normal cell"))
     cp = cp[, c("sel", "small", "direction", "x", "y", "cell")]
@@ -23,7 +23,11 @@ base_tmap <- function(cp, borders = NULL, basemaps = "OpenStreetMap", cells = ch
 #        tmap_options(projection = 0, basemaps = NULL)
         tm <- list()
     } else {
-        tm <- tm_basemap("OpenStreetMap")
+        if (is.na(st_crs(cp))) {
+            tm <- tm_basemap(NULL)
+        } else {
+            tm <- tm_basemap("OpenStreetMap")
+        }
     }
 
 
@@ -47,18 +51,23 @@ base_tmap <- function(cp, borders = NULL, basemaps = "OpenStreetMap", cells = ch
     } else {
         if (settings$cell_labels) {
             tm <- tm + tm_shape(cp) +
-                tm_dots("sel", palette = cell_palette, size = .04 * settings$cell_size, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
+                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
                 tm_text("cell", xmod = 0.5, ymod = 0.5, col = settings$cell_label_color)
         } else {
             tm <- tm + tm_shape(cp) +
-                tm_dots("sel", palette = cell_palette, size = .04 * settings$cell_size, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
+                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
         }
 
     }
 
-    if (!is.null(borders)) {
-        #tm <- tm + tm_shape(borders) + tm_polygons(col = NA, border.col = "black", group = "Cell locations", interactive = FALSE, alpha = 0)
-        tm <- tm + tm_shape(borders, is.master = TRUE) + tm_borders(col = "black", group = "Cell locations", zindex = 403)
+    if (!is.null(dev)) {
+        tm <- tm + tm_shape(dev) +
+            tm_symbols(size = .04 * settings$dev_size, col = settings$dev_color, shape = settings$dev_shape)
+    }
+
+    if (!is.null(region)) {
+        #tm <- tm + tm_shape(region) + tm_polygons(col = NA, border.col = "black", group = "Cell locations", interactive = FALSE, alpha = 0)
+        tm <- tm + tm_shape(region, is.master = TRUE) + tm_borders(col = "black", group = "Cell locations", zindex = 403, lwd = settings$region.lwd)
     }
     tm
 }
@@ -75,7 +84,7 @@ base_tmap <- function(cp, borders = NULL, basemaps = "OpenStreetMap", cells = ch
 #' @param title title
 #' @param palette palette The default depends on \code{var}: \code{-Blues} (from ColorBrewer) for unspecified \code{var}, \code{-Greens} for \code{"pag"}, \code{-Blues} for \code{"pg"}, \code{viridis} for \code{"pga"}, \code{Set2} for \code{"bsm"}.
 #' @param cells cells to select
-#' @param borders borders (polygon) of the region of interest
+#' @param region borders (polygon) of the region of interest
 #' @param interactive should the map be interactive or static?
 #' @param basemaps basemaps used in the interactive map
 #' @param opacity the opacity of the raster layer.
@@ -83,14 +92,15 @@ base_tmap <- function(cp, borders = NULL, basemaps = "OpenStreetMap", cells = ch
 #' @param settings mobvis settings
 #' @import tmap
 #' @export
-map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), borders = NULL, interactive = TRUE, basemaps = "OpenStreetMap", opacity = 1, proxy = FALSE, settings = mobvis_settings()) {
+map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), region = NULL, dev = NULL, interactive = TRUE, basemaps = "OpenStreetMap", opacity = 1, proxy = FALSE, settings = mobvis_settings()) {
     # check required columns
     if (!all(c("cell", "small", "direction", "x", "y") %in% names(cp))) stop("cp does not contain all the required columns: cell, small, direction, x, and y")
 
-    tmap_mode(ifelse(interactive, "view", "plot"))
+    suppressMessages(tmap_mode(ifelse(interactive, "view", "plot")))
 
     tm2 <- base_tmap(cp = cp,
-                     borders = if (proxy) NULL else borders,
+                     region = if (proxy) NULL else region,
+                     dev = dev,
                      basemaps = if (proxy) NA else basemaps, cells = cells, settings = settings)
 
 
@@ -108,6 +118,9 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
     } else {
         var <- "custom"
     }
+
+    line_br <- ifelse(interactive, "<br>", "\n")
+
 
     if (var != "none") {
         if (var == "bsm") {
@@ -131,7 +144,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
                 values2 <- values
             }
             rst[] <- values2
-            appendix <- ifelse(allOnes || (!inThousands && !inMillions), "", paste0("<br>(in 1 / ", ifelse(inThousands, "1,000", "1,000,000"), ")"))
+            appendix <- ifelse(allOnes || (!inThousands && !inMillions), "", paste0(line_br, "(in 1 / ", ifelse(inThousands, "1,000", "1,000,000"), ")"))
         }
 
         if (is.na(title)) {
