@@ -2,24 +2,29 @@
 % Please edit documentation in R/mobvis_settings.R
 \name{mobvis_settings}
 \alias{mobvis_settings}
-\alias{mobvis_settings_static}
+\alias{mobvis_settings_interactive}
+\alias{mobvis_settings_animation}
 \title{Settings of mobvis}
 \usage{
 mobvis_settings(
   titles = c(dBm = "Signal strength in dBm", s = "Signal dominance - s", bsm =
     "Best server map", pg = "Prior - P(g)", pag = "Connection likelihood - P(a|g)", pga =
     "Location posterior - P(g|a)"),
-  palettes = list(dBm = "Blues", s = "-Blues", bsm = "Set2", pg = "-Blues", pag =
-    "-Greens", pga = "viridis"),
-  palette = "-Blues",
-  cell_colors = c(Selected = "red", `Small cell` = "goldenrod3", `Normal cell` =
-    "gold"),
+  palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "Set2", pg = "-YlGnBu", pag =
+    "-YlGn", pga = "-YlOrBr"),
+  palette = "-YlGnBu",
+  style = "pretty",
+  cell_colors = c(Selected = "red", `Small cell` = "black", `Normal cell` = "black"),
   cell_size = 0.5,
-  cell_offset = 150,
-  cell_legend = length(cell_colors) > 1,
+  cell_shape = 19,
+  cell_offset = 75,
+  cell_legend = FALSE,
   cell_labels = FALSE,
   cell_label_color = "black",
-  region.lwd = 2,
+  region.lwd = 3,
+  dev_size = 0.5,
+  dev_color = "purple",
+  dev_shape = 15,
   use_classes = TRUE,
   dBm_classes = list(breaks = c(-Inf, seq(-120, -70, by = 10), Inf), labels =
     c("-120 or less", "-120 to -110", "-110 to -100", "-100 to -90", "-90 to -80",
@@ -27,17 +32,20 @@ mobvis_settings(
     lims = c(-120, -70), tit = "Signal strength (dBm)"),
   s_classes = list(breaks = seq(0, 1, by = 0.1), labels = paste(sprintf("\%.1f", seq(0,
     1, by = 0.1)[1:10]), "to", sprintf("\%.1f", seq(0, 1, by = 0.1)[2:11])), colors =
-    RColorBrewer::brewer.pal(10, "Spectral"), lims = c(0, 1))
+    RColorBrewer::brewer.pal(10, "Spectral"), lims = c(0, 1)),
+  basemaps = "OpenStreetMap"
 )
 
-mobvis_settings_static(
-  cell_colors = c(Selected = "red", `Small cell` = "black", `Normal cell` = "black"),
-  cell_size = 0.5,
-  cell_offset = 0,
-  cell_legend = FALSE,
-  region.lwd = 3,
+mobvis_settings_interactive(
+  cell_colors = c(Selected = "red", `Small cell` = "goldenrod3", `Normal cell` =
+    "gold"),
+  cell_offset = 150,
+  cell_legend = TRUE,
+  region.lwd = 2,
   ...
 )
+
+mobvis_settings_animation(style = "cont", ...)
 }
 \arguments{
 \item{titles}{default titles. Named character vector, where the names should be dBm, s, bsm, pag, pg and pga.}
@@ -46,19 +54,37 @@ mobvis_settings_static(
 
 \item{palette}{default palette for non-standard plots}
 
+\item{style}{the style of the color classes, e.g. "pretty" for pretty rounded breaks, and "cont" for continuous classes. See the \code{style} argument of \code{\link[tmap:tm_raster]{tm_raster}} for all options.}
+
 \item{cell_colors}{either a single color for all cells, or a vector of colors named: Selected, Small cell and Normal cell}
 
-\item{cell_size}{size of the cell}
+\item{cell_size}{size of the cell(s)}
 
-\item{cell_offset}{offset of the cells. If not 0, the cells are moved into the propagation direction}
+\item{cell_shape}{shape of the cell(s), by default a dot. Run the last example from \code{\link[tmap:tm_symbols]{tm_symbols}} to see all options.}
+
+\item{cell_offset}{offset of the cell(s). If not 0, the cells are moved into the propagation direction}
 
 \item{cell_legend}{should the legend for the different cells be included?}
+
+\item{cell_labels}{logical that determines whether the cell labels are printed (default \code{FALSE})}
+
+\item{cell_label_color}{color of the cell labels}
+
+\item{region.lwd}{line width of the region borders}
+
+\item{dev_size}{size of the device(s)}
+
+\item{dev_color}{color of the device(s)}
+
+\item{dev_shape}{shape of the device(s)}
 
 \item{use_classes}{logical that determines whether the signal strength (dBm) and dominance (s) should be plot in classes (default) or using a sequential palette. The classes are defined by dBm_classes and s_classes}
 
 \item{dBm_classes}{list that defines the classes for the signal strength}
 
 \item{s_classes}{list that defines the classes for the signal dominance}
+
+\item{basemaps}{basemap(s) for interactive maps (see leaflet::providers and \url{https://leaflet-extras.github.io/leaflet-providers/preview/} for options). It can also be a vector of basemaps. In that case, the user can switch between them. If the CRS is missing in the spatial objects, the basemaps are turned off.}
 
 \item{...}{passed on to mobvis_settings}
 }

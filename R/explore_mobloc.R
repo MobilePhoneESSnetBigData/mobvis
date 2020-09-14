@@ -38,7 +38,7 @@ prior_to_df <- function(prior, raster) {
 #' @example ./examples/explore_mobloc.R
 #' @seealso \href{../doc/mobloc.html}{\code{vignette("mobloc")}}
 #' @export
-explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filter = NULL, coverage_map_dBm = NULL, coverage_map_s = NULL, best_server_map = NULL, settings = mobvis_settings()) {
+explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filter = NULL, coverage_map_dBm = NULL, coverage_map_s = NULL, best_server_map = NULL, settings = mobvis_settings_interactive()) {
 
 
     if (!missing(filter)) {
@@ -68,9 +68,6 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
     choices_prior <- paste0("p", 1L:nprior)
     names(choices_prior) <- paste0("Prior ", pnames)
     names(pnames) <- choices_prior
-
-    print(choices_prior)
-    print(pnames)
 
     lnames <- names(llhlist)
     nllh <- length(lnames)
@@ -315,14 +312,12 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                     }
                 }
 
-                #viz_p(cp = cp, rst = rst, var = type, trans = input$trans, offset = ifelse(input$offset, offset_value, 0), rect = rect, proxy = TRUE)
-                map_mob_cells(cp, rst, var = type, borders = rect, proxy = TRUE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel, settings = settings)
+                map_mob_cells(cp, rst, var = type, region = rect, proxy = TRUE, interactive = TRUE, opacity = input$trans, cells = sel, settings = settings)
 
             })
 
             observeEvent(input$map_marker_click, { # update the location selectInput on map clicks
                 p <- input$map_marker_click
-print(p)
                 id <- which(sapply(cells, function(cl) {
                     length(grep(cl, p$id, fixed = TRUE)) == 1
                 }))[1]
@@ -379,6 +374,8 @@ create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel) {
         dt[, x:= priordf$p[match(dt$rid, priordf$rid)]]
     } else if (type == "pag") {
         dt[, x := pag]
+    } else  if (type == "p") {
+        dt[, x := p]
     } else {
 
         if (!("pga" %in% names(dt))) {

@@ -11,12 +11,13 @@ map_mob_cells(
   title = NA,
   palette = NA,
   cells = character(),
-  borders = NULL,
+  region = NULL,
+  dev = NULL,
   interactive = TRUE,
-  basemaps = "OpenStreetMap",
   opacity = 1,
   proxy = FALSE,
-  settings = mobvis_settings()
+  settings = mobvis_settings(),
+  ...
 )
 }
 \arguments{
@@ -28,21 +29,23 @@ map_mob_cells(
 
 \item{title}{title}
 
-\item{palette}{palette The default depends on \code{var}: \code{-Blues} (from ColorBrewer) for unspecified \code{var}, \code{-Greens} for \code{"pag"}, \code{-Blues} for \code{"pg"}, \code{viridis} for \code{"pga"}, \code{Set2} for \code{"bsm"}.}
+\item{palette}{palette The default depend is taken from the \code{settings}}
 
 \item{cells}{cells to select}
 
-\item{borders}{borders (polygon) of the region of interest}
+\item{region}{borders (polygon) of the region of interest}
+
+\item{dev}{\code{sf} object of device(s)}
 
 \item{interactive}{should the map be interactive or static?}
-
-\item{basemaps}{basemaps used in the interactive map}
 
 \item{opacity}{the opacity of the raster layer.}
 
 \item{proxy}{should the map be updated in a Shiny app?}
 
 \item{settings}{mobvis settings}
+
+\item{...}{arguments passed on to \code{\link[tmap:tm_raster]{tm_raster}}}
 }
 \description{
 Visualize mobile phone cells and auxiliary data, such as signal strength, location estimation variables. This function is used in \code{\link{explore_mobloc}}, and also by dedicated functions such as \code{\link{map_sig_strength}}.

@@ -108,7 +108,7 @@ sim_get_trajectory_routes <- function(sim, device = NULL) {
     })
 
     sfc <- st_sfc(dists, crs = sim$crs)
-    y <- st_sf(dev = devs, geometry = sfc)
+    y <- st_sf(dev = device, geometry = sfc)
 
     y$distance <- sf::st_length(y)
     y
@@ -128,4 +128,27 @@ sim_devices_at_t <- function(sim, t) {
         st_as_sf(coords = c("x", "y"), crs = sim$crs)
 }
 
+# RUN THIS CODE TO SAVE A SUBSET OF PROBABILITIES FOR THE EXAMPLE DATA IN INST
+#
+# p <- fread("probabilities_network_MNO1.csv")
+# setnames(p, "Phone ID", "dev")
+# p2 <- p[dev %in% c(210, 250, 741), ]
+# setnames(p2, "dev", "Phone ID")
+# fwrite(p2, file = "probabilities_network_MNO1_sel.csv")
 
+
+sim_get_prob <- function(sim, device, th = 1e-6) {
+    p <- fread(file.path(sim$output_dir, paste0("probabilities_network_", sim$mno,".csv")))
+    setnames(p, "Phone ID", "dev")
+    psel <- p[dev %in% device, ] %>%
+        tidyr::as_tibble() %>%
+        tidyr::pivot_longer(
+            cols = starts_with("Tile"),
+            names_to = "rid",
+            values_to = "p"
+        ) %>%
+        dplyr::mutate(rid = as.integer(substr(rid, 5, nchar(rid)))) %>%
+        dplyr::filter(p >= th) %>%
+        as.data.table()
+    psel
+}

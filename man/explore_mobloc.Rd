@@ -15,7 +15,7 @@ explore_mobloc(
   coverage_map_dBm = NULL,
   coverage_map_s = NULL,
   best_server_map = NULL,
-  settings = mobvis_settings()
+  settings = mobvis_settings_interactive()
 )
 }
 \arguments{

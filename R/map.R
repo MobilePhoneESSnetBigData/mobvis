@@ -82,17 +82,18 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
 #' @param rst raster data
 #' @param var if specified, \code{title} and \code{palette} are specified accordingly. Possible values: \code{"dBm", "s", "pga", "pag", "pg", "bsm"}.
 #' @param title title
-#' @param palette palette The default depends on \code{var}: \code{-Blues} (from ColorBrewer) for unspecified \code{var}, \code{-Greens} for \code{"pag"}, \code{-Blues} for \code{"pg"}, \code{viridis} for \code{"pga"}, \code{Set2} for \code{"bsm"}.
+#' @param palette palette The default depend is taken from the \code{settings}
 #' @param cells cells to select
 #' @param region borders (polygon) of the region of interest
+#' @param dev \code{sf} object of device(s)
 #' @param interactive should the map be interactive or static?
-#' @param basemaps basemaps used in the interactive map
 #' @param opacity the opacity of the raster layer.
 #' @param proxy should the map be updated in a Shiny app?
 #' @param settings mobvis settings
+#' @param ... arguments passed on to \code{\link[tmap:tm_raster]{tm_raster}}
 #' @import tmap
 #' @export
-map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), region = NULL, dev = NULL, interactive = TRUE, basemaps = "OpenStreetMap", opacity = 1, proxy = FALSE, settings = mobvis_settings()) {
+map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), region = NULL, dev = NULL, interactive = TRUE, opacity = 1, proxy = FALSE, settings = mobvis_settings(), ...) {
     # check required columns
     if (!all(c("cell", "small", "direction", "x", "y") %in% names(cp))) stop("cp does not contain all the required columns: cell, small, direction, x, and y")
 
@@ -101,7 +102,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
     tm2 <- base_tmap(cp = cp,
                      region = if (proxy) NULL else region,
                      dev = dev,
-                     basemaps = if (proxy) NA else basemaps, cells = cells, settings = settings)
+                     basemaps = if (proxy) NA else settings$basemaps, cells = cells, settings = settings)
 
 
     cell_colors <- settings$cell_colors
@@ -133,12 +134,12 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
             allOnes <- (minv > .999 && maxv <= 1.001)
             inThousands <- (maxv > 0.01 && maxv < 0.1 && minv >= 0)
             inMillions <- (maxv <= 0.01 && minv >= 0)
-            if (allOnes) {
+            if (allOnes && is.na(title)) {
                 values2 <- 1
                 #values <- pmin(pmax(rst[], 0), 1)
-            } else if (inThousands) {
+            } else if (inThousands && is.na(title)) {
                 values2 <- values * 1000
-            } else if (inMillions) {
+            } else if (inMillions && is.na(title)) {
                 values2 <- values * 1000000
             } else {
                 values2 <- values
@@ -166,10 +167,10 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
 
         if (var %in% c("dBm", "s") && settings$use_classes) {
             tm <- tm_shape(rst) +
-                tm_raster(names(rst)[1], palette = cls$colors, alpha = opacity, title = title, breaks = cls$breaks, labels = cls$labels, group = "Data", zindex = 404)
+                tm_raster(names(rst)[1], palette = cls$colors, alpha = opacity, title = title, breaks = cls$breaks, labels = cls$labels, group = "Data", zindex = 404, ...)
         } else if (var != "empty") {
             tm <- tm_shape(rst) +
-                tm_raster(names(rst)[1], palette = palette, alpha = opacity, n = 7, stretch.palette = FALSE, title = title, group = "Data", zindex = 404, legend.show = (var != "bsm"))
+                tm_raster(names(rst)[1], palette = palette, style = settings$style, alpha = opacity, n = 7, stretch.palette = FALSE, title = title, group = "Data", zindex = 404, legend.show = (var != "bsm"), ...)
             if (var == "bsm") {
                 tm <- tm + tm_layout(main.title = title)
             }

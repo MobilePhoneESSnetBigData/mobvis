@@ -6,8 +6,9 @@
 \alias{map_best_server}
 \alias{map_pg}
 \alias{map_pag}
+\alias{map_p}
 \alias{map_pga}
-\title{Map signal strength (dBm), signal dominance (s), prior (pg), likelihood (pag), and posterior (pga).}
+\title{Map signal strength (dBm), signal dominance (s), prior (pg), likelihood (pag), posterior (pga), and any other probability (p).}
 \usage{
 map_sig_strength(
   rst,
@@ -15,9 +16,12 @@ map_sig_strength(
   cp,
   cells = NA,
   region = NULL,
+  dev = NULL,
   type = c("dBm", "s"),
   interactive = TRUE,
-  settings = mobvis_settings()
+  title = NA,
+  settings = mobvis_settings(),
+  ...
 )
 
 map_best_server(
@@ -26,17 +30,36 @@ map_best_server(
   cp,
   cells = NA,
   region = NULL,
+  dev = NULL,
   type = c("dBm", "s"),
   interactive = TRUE,
-  settings = mobvis_settings()
+  title = NA,
+  settings = mobvis_settings(),
+  ...
 )
 
 map_pg(
   rst,
   cp,
   region = NULL,
+  dev = NULL,
   interactive = TRUE,
-  settings = mobvis_settings()
+  title = NA,
+  settings = mobvis_settings(),
+  ...
+)
+
+map_p(
+  rst,
+  dt,
+  cp,
+  cells = NA,
+  region = NULL,
+  dev = NULL,
+  interactive = TRUE,
+  title = NA,
+  settings = mobvis_settings(),
+  ...
 )
 
 map_pag(
@@ -45,8 +68,11 @@ map_pag(
   cp,
   cells = NA,
   region = NULL,
+  dev = NULL,
   interactive = TRUE,
-  settings = mobvis_settings()
+  title = NA,
+  settings = mobvis_settings(),
+  ...
 )
 
 map_pga(
@@ -55,27 +81,36 @@ map_pga(
   cp,
   cells = NA,
   region = NULL,
+  dev = NULL,
   interactive = TRUE,
-  settings = mobvis_settings()
+  title = NA,
+  settings = mobvis_settings(),
+  ...
 )
 }
 \arguments{
-\item{rst}{rst}
+\item{rst}{raster object}
 
-\item{dt}{dt}
+\item{dt}{dt data.table that contains the data to be mapped}
 
-\item{cp}{cp}
+\item{cp}{cellplan \code{sf} object of the cells}
 
-\item{cells}{cells}
+\item{cells}{cells cells for which the data is shown}
 
-\item{region}{region}
+\item{region}{region \code{sf} object that contains the borders of the region. If omitted, the raster borders are shown.}
 
-\item{type}{type}
+\item{dev}{dev \code{sf} object of the location of one or more devices (needed for the animation functions)}
 
-\item{interactive}{interactive}
+\item{type}{type \code{"dBm"} for signal strength or \code{"s"} for signal dominance}
 
-\item{settings}{settings}
+\item{interactive}{should the map be interactive?}
+
+\item{title}{title of the map. The default value is stored in the settings.}
+
+\item{settings}{settings of the map. See \code{\link{mobvis_settings}}.}
+
+\item{...}{arguments passed on to \code{\link[tmap:tm_raster]{tm_raster}}}
 }
 \description{
-Map signal strength
+Map signal strength (dBm), signal dominance (s), prior (pg), likelihood (pag), posterior (pga) and any other probability (p). See the vignettes to see how there are used with the mobloc package and the simulator files.
 }

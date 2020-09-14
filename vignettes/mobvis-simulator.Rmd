@@ -18,6 +18,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+The simulator software is a framework to run mobile network data micro-simulations [1]. In this vignette, we describe how the results can be plotted with the R package **mobvis**.
+
+Besides **mobvis**, the R package **tmap** is required, which is used to plot spatial data. The **tmap** package is already used under the hood in **mobvis**, but we will also use it to explore spatial objects in general. 
 
 ```{r}
 library(mobvis)
@@ -25,7 +28,8 @@ library(tmap)
 tmap_options(show.warnings = FALSE)
 ```
 
-The simulator software is a framework to run mobile network data micro-simulations [1]
+The last code line is needed to suppress warnings raised by *tmap* for plotting fictional spatial objects, i.e. that do not have a real geographic location.
+
 
 ## Example data from the simulator
 
@@ -43,30 +47,42 @@ unzip(zipfile, exdir = dir)
 
 In this case, the files will be located in the `"simdata"` subfolder of the working directory. The input files are stored in that folder, and the output files in the subfolder `"simdata/output"`.
 
-In order to use this simulator data in **mobvis**, we have to create a list object that contains a few settings.
+In order to use this simulator data in **mobvis**, we have to create a list object that contains a few settings:
 
 ```{r}
 sim <- list(input_dir = "simdata",
             output_dir = "simdata/output",
             mno = "MNO1",
-            crs = st_crs(NA))
+            crs = sf::st_crs(NA))
 ```
 
-Besides the input and output directories, it also contains the MNO name, in this case `"MNO1"`, and a CRS (coordinate reference system). The latter is needed
+Besides the input and output directories, it also contains the Mobile Network Operator (MNO) name, in this case `"MNO1"`, and a CRS (coordinate reference system). The latter is needed to project the spatial data on the surface of the earth. If the CRS is missing (such as in this example), the coordinate units are still considered to be meters. However, since there is no information about the projection itself, it is not possible to use basemaps in interactive maps.
 
-
-it also contains a crs (coordinate reference system), which is needed to create interactive maps.
-Since this data is fictional, the crs is centered on Boa Vista, a small island in the Atlantic Ocean.
-
-
-## Signal strength
+The following code is used to load the simulator data into R. Note that all the functions in the **mobvis** package that do this have a `sim_get_` prefix.
 
 ```{r, fig.show="hold", out.width="80%"}
 rst <- sim_get_raster(sim)
 cp <- sim_get_cellplan(sim)
 region <- sim_get_region(sim)
-strength <- sim_get_signal_strength(sim, rst, cp)
+```
 
+The object `rst` is a raster object that contains the tile id numbers. In correspondence with [1], the numbering goes from left to right and then bottom to top, with 0 being the number for the bottom right tile.
+
+The object `cp` is the cellplan, which is an `sf` object that contains the locations of the cells, and physical properties such as the power.
+
+The object `region` is an `sf` object that contains the borders of the region of interest.
+
+## Signal strength
+
+The following function reads the signal strength and signal dominance data into R:
+
+```{r, fig.show="hold", out.width="80%"}
+strength <- sim_get_signal_strength(sim, rst, cp)
+```
+
+The maps are created in the same way as with **mobloc** data as described in the other vignette. Recall that `mobvis_settings()` is a function that generated a list of visualization settings, that can be changed, as the following examples show.
+
+```{r, fig.show="hold", out.width="80%"}
 map_sig_strength(rst, 
                  dt = strength, 
                  cp = cp, 
@@ -74,8 +90,8 @@ map_sig_strength(rst,
                  cells = 3, 
                  type = "dBm", 
                  interactive = FALSE, 
-                 settings = mobvis_settings_static(cell_size = 1,
-                                                   cell_labels = TRUE))
+                 settings = mobvis_settings(cell_size = 1,
+                                            cell_labels = TRUE))
 map_sig_strength(rst, 
                  dt = strength, 
                  cp = cp, 
@@ -83,10 +99,10 @@ map_sig_strength(rst,
                  cells = 3, 
                  type = "s", 
                  interactive = FALSE, 
-                 settings = mobvis_settings_static(cell_colors = "gold", 
-                                                   cell_size = 1, 
-                                                   cell_labels = TRUE, 
-                                                   cell_label_color = "white"))
+                 settings = mobvis_settings(cell_colors = "gold", 
+                                            cell_size = 1, 
+                                            cell_labels = TRUE, 
+                                            cell_label_color = "white"))
 map_best_server(rst = rst,
                 dt = strength,
                 cp = cp,
@@ -94,16 +110,17 @@ map_best_server(rst = rst,
                 cells = 3,
                 type = "bsm",
                 interactive = FALSE,
-                settings = mobvis_settings_static(cell_colors = "black", 
-                                                  cell_size = 1, 
-                                                  cell_labels = TRUE, 
-                                                  cell_label_color = "black"))
+                settings = mobvis_settings(cell_size = 1, 
+                                           cell_labels = TRUE))
 ```
+
+The last map, the Best Server Map shows the cell with the best signal strength per tile. Often, this is the nearest cell, but not necessarily. 
 
 
 ## Event location
 
-The following function visualizes the event location.
+The following function visualizes the event location. The event location (likelihood) probabilities are calculated with **mobloc** (see other vignette).
+
 
 ```{r}
 # Calculate the event location (likelihood) probabilities using mobloc
@@ -112,8 +129,8 @@ param <- mobloc_param()
 strength[, dist:= NA]
 strength_llh <- create_strength_llh(strength, param = param)
 
-# Edit the visualization settings
-settings = mobvis_settings_static(cell_size = 2, dev_size = 2)
+# Retrieve and change the visualization settings
+settings = mobvis_settings(cell_size = 2, dev_size = 2)
 settings$titles["pag"] <- "Event location"
 
 # Create the plot
@@ -129,7 +146,11 @@ map_pag(rst,
 
 ## Posterior probabilities
 
+The following function visualizes the probability location. The probabilities are also calculated with **mobloc**. The network prior is used.
+
+
 ```{r}
+# Calculate the event location (likelihood) probabilities using mobloc
 network_prior <- create_network_prior(strength, rst)
 posterior <- calculate_posterior(prior = network_prior, llh = strength_llh, raster = rst)
 
@@ -144,8 +165,8 @@ map_pga(rst,
         cells = 3, 
         interactive = FALSE, 
         settings = settings)
-
 ```
+
 
 
 ## Trajectories
@@ -155,53 +176,65 @@ The simulator simulates trajectories of devices. The following code retrieves th
 
 ```{r}
 # get route and distance per device
-routes <- sim_get_trajectory_routes(sim)
-print(routes)
+(routes <- sim_get_trajectory_routes(sim))
 
 # plot the routes with tmap (run tmap_mode("view") to show it interactively)
-qtm(region) + qtm(routes)
+qtm(region, fill= NULL) + qtm(routes)
 ```
 
-Interactive exploratin of this map allows us to focus on particular devices that are interesting for further analysis. For instance, the route of device 250 is interesting, since it moved at a steady pace and direction in an area with a high density of cells, including one atenna that contains three directional cells.
+Interactive exploration of this map allows us to focus on particular devices that are interesting for further analysis. For instance, the route of device 250 is interesting, since it moved at a steady pace and direction within the south-west part of the region, which has a high density of cells, including one antenna that contains three directional cells.
+
+The following code chunk creates an animation of the event locations of the cells to which device 250 is connected. Both gif and mp4 animations can be created. The former generally creates sharper images, but is much larger in file size.
 
 
 ```{r}
-traj <- sim_get_trajectory_data(sim, device = 250)
+(traj <- sim_get_trajectory_data(sim, device = 250))
 
-maps_event_loc <- lapply(1:nrow(traj), function(i) {
-    ti = traj[i,]
-    llhi = strength_llh[cell==ti$cell, ]
-    map_pag(rst, 
-            dt = llhi, 
-            cp = cp, 
-            region = region, 
-            cells = ti$cell, 
-            dev = ti,
-            interactive = FALSE, 
-            settings = settings)
-})
+settings = mobvis_settings_animation(cell_size = 2, dev_size = 2)
 
-tmap_animation(maps_event_loc, filename = "event_locations_dev_250.mp4", width = 700, height = 700, fps = 3)
+animate_pag(rst = rst,
+            dt = strength_llh,
+            cp = cp,
+            traj = traj,
+            region = region,
+            settings = settings,
+            title = "Event location at time %s",
+            filename = "event_locations_dev_%s.mp4")
 ```
+
+
+In a similar way, an animation for the posterior probabilities is created as follows.
+
 
 ```{r}
-maps_post = lapply(1:nrow(traj), function(i) {
-    ti = traj[i,]
-    posti = posterior[cell==ti$cell, ]
-    map_pga(rst, 
-            dt = posti, 
-            cp = cp, 
-            region = region, 
-            cells = ti$cell, 
-            dev = ti,
-            interactive = FALSE, 
-            settings = settings)
-})
-
-tmap_animation(maps_post, filename = "posterior_dev_250.mp4", width = 700, height = 700, fps = 3)
+animate_pga(rst = rst,
+            dt = posterior,
+            cp = cp,
+            traj = traj,
+            region = region,
+            settings = settings,
+            title = "Posterior distribution at time %s",
+            filename = "posterior_dev_%s.mp4")
 ```
 
 
+## HMM probabilities
+
+One of the output files of the simulator is called \code{"probabilities_network_MNO1.csv"}.
+
+
+```{r}
+(prob <- sim_get_prob(sim, device = 250))
+
+animate_p(rst = rst,
+          dt = prob,
+          cp = cp,
+          traj = traj,
+          region = region,
+          settings = settings,
+          title = "HMM probability distribution at time %s",
+          filename = "HMM_probabilities_dev_%s.mp4")
+```
 
 
 
