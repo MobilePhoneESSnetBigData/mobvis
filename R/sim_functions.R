@@ -5,6 +5,9 @@
 #' @param sim list containing the following elements: \code{input_dir}, \code{output_dir}, \code{crs}.
 #' @param rst rst
 #' @param cp cp
+#' @param device device id
+#' @param t time id
+#' @param th probability threshold. Only probabilities of at least `th` are returned
 #' @export
 #' @name sim_get_region
 #' @rdname sim_data
@@ -71,7 +74,9 @@ sim_get_signal_strength <- function(sim, rst, cp) {
         as.data.table()
 }
 
-
+#' @name sim_get_trajectory_data
+#' @rdname sim_data
+#' @export
 sim_get_trajectory_data <- function(sim, device = NULL) {
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
     x <- readr::read_csv(f)
@@ -89,6 +94,9 @@ sim_get_trajectory_data <- function(sim, device = NULL) {
         st_as_sf(coords = c("x", "y"), crs = sim$crs)
 }
 
+#' @name sim_get_trajectory_routes
+#' @rdname sim_data
+#' @export
 sim_get_trajectory_routes <- function(sim, device = NULL) {
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
     x <- readr::read_csv(f) %>%
@@ -114,6 +122,9 @@ sim_get_trajectory_routes <- function(sim, device = NULL) {
     y
 }
 
+#' @name sim_devices_at_t
+#' @rdname sim_data
+#' @export
 sim_devices_at_t <- function(sim, t) {
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
     x <- readr::read_csv(f)
@@ -136,7 +147,9 @@ sim_devices_at_t <- function(sim, t) {
 # setnames(p2, "dev", "Phone ID")
 # fwrite(p2, file = "probabilities_network_MNO1_sel.csv")
 
-
+#' @name sim_get_prob
+#' @rdname sim_data
+#' @export
 sim_get_prob <- function(sim, device, th = 1e-6) {
     p <- fread(file.path(sim$output_dir, paste0("probabilities_network_", sim$mno,".csv")))
     setnames(p, "Phone ID", "dev")
