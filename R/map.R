@@ -80,7 +80,7 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
 #'
 #' @param cp cellplan
 #' @param rst raster data
-#' @param var if specified, \code{title} and \code{palette} are specified accordingly. Possible values: \code{"dBm", "s", "pga", "pag", "pg", "bsm"}.
+#' @param var if specified, \code{title} and \code{palette} are specified accordingly. Possible values: \code{"dBm", "s", "pga", "pag", "pg", "p", "bsm"}.
 #' @param title title
 #' @param palette palette The default depend is taken from the \code{settings}
 #' @param cells cells to select
@@ -115,7 +115,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
 
     # check var, title and palette
     if (!is.null(var)) {
-        if (!(var %in% c("dBm", "s", "pga", "pag", "pg", "bsm", "none"))) stop("unknown var")
+        if (!(var %in% c("dBm", "s", "pga", "pag", "pg", "p", "bsm", "none"))) stop("unknown var")
     } else {
         var <- "custom"
     }
@@ -129,6 +129,13 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
             appendix <- ""
         } else if (!is.factor(rst)) {
             values <- rst[]
+
+            if (var %in% c("pga", "pg", "pag", "p")) {
+                if (is.na(settings$prob_th)) values[is.na(values)] <- 0
+            } else {
+                values[values < settings$prob_th] <- NA
+            }
+
             maxv <- max(values, na.rm = TRUE)
             minv <- min(values, na.rm = TRUE)
             allOnes <- (minv > .999 && maxv <= 1.001)
@@ -155,7 +162,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
         if (all(is.na(rst[]))) var <- "empty"
 
         if (is.na(palette[1])) {
-            palette <- if (var %in% c("custom", "none", "empty")) settings$palette else unname(settings$palettes[[var]])
+            palette <- if (var %in% c("custom", "none", "empty", "p")) settings$palette else unname(settings$palettes[[var]])
         }
 
         cls <- if (var == "dBm")  {
@@ -184,6 +191,6 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
     if (proxy) {
         tmapProxy("map", x = tm_remove_layer(402) + tm_remove_layer(404) + tm2 + tm)
     } else {
-        tm + tm2 + tm_layout(legend.outside = TRUE, frame = FALSE)
+        tm + tm2 + tm_layout(legend.outside = TRUE, frame = FALSE, bg.color = settings$bg.color)
     }
 }

@@ -14,6 +14,8 @@
 #' @param height height of the animation
 #' @param fps frame per second
 #' @export
+#' @rdname animate
+#' @name animate_pag
 animate_pag <- function(rst,
                         dt,
                         traj,
@@ -39,6 +41,9 @@ animate_pag <- function(rst,
                 var = "pag")
 }
 
+#' @export
+#' @rdname animate
+#' @name animate_pga
 animate_pga <- function(rst,
                         dt,
                         traj,
@@ -64,6 +69,9 @@ animate_pga <- function(rst,
                 var = "pga")
 }
 
+#' @export
+#' @rdname animate
+#' @name animate_p
 animate_p <- function(rst,
                       dt,
                       traj,

@@ -10,9 +10,9 @@ mobvis_settings(
   titles = c(dBm = "Signal strength in dBm", s = "Signal dominance - s", bsm =
     "Best server map", pg = "Prior - P(g)", pag = "Connection likelihood - P(a|g)", pga =
     "Location posterior - P(g|a)"),
-  palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "Set2", pg = "-YlGnBu", pag =
-    "-YlGn", pga = "-YlOrBr"),
-  palette = "-YlGnBu",
+  palettes = list(dBm = "YlGnBu", s = "YlGnBu", bsm = "Set2", pg = "YlGnBu", pag =
+    "YlGn", pga = "YlOrBr"),
+  palette = "YlGnBu",
   style = "pretty",
   cell_colors = c(Selected = "red", `Small cell` = "black", `Normal cell` = "black"),
   cell_size = 0.5,
@@ -33,15 +33,20 @@ mobvis_settings(
   s_classes = list(breaks = seq(0, 1, by = 0.1), labels = paste(sprintf("\%.1f", seq(0,
     1, by = 0.1)[1:10]), "to", sprintf("\%.1f", seq(0, 1, by = 0.1)[2:11])), colors =
     RColorBrewer::brewer.pal(10, "Spectral"), lims = c(0, 1)),
+  prob_th = NA,
+  bg.color = "grey90",
   basemaps = "OpenStreetMap"
 )
 
 mobvis_settings_interactive(
+  palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "Set2", pg = "-YlGnBu", pag =
+    "-YlGn", pga = "-YlOrBr"),
   cell_colors = c(Selected = "red", `Small cell` = "goldenrod3", `Normal cell` =
     "gold"),
   cell_offset = 150,
   cell_legend = TRUE,
   region.lwd = 2,
+  prob_th = 1e-06,
   ...
 )
 
@@ -83,6 +88,10 @@ mobvis_settings_animation(style = "cont", ...)
 \item{dBm_classes}{list that defines the classes for the signal strength}
 
 \item{s_classes}{list that defines the classes for the signal dominance}
+
+\item{prob_th}{probability threshold, i.e. tiles with probabilities lower than \code{prob_th} are not colored. By default 1e-06 for interactive maps and \code{NA} otherwise, meaning that all tiles are colored.}
+
+\item{bg.color}{background color (for static maps only)}
 
 \item{basemaps}{basemap(s) for interactive maps (see leaflet::providers and \url{https://leaflet-extras.github.io/leaflet-providers/preview/} for options). It can also be a vector of basemaps. In that case, the user can switch between them. If the CRS is missing in the spatial objects, the basemaps are turned off.}
 

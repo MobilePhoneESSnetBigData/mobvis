@@ -18,17 +18,18 @@ knitr::opts_chunk$set(
 )
 ```
 
-The simulator software is a framework to run mobile network data micro-simulations [1]. In this vignette, we describe how the results can be plotted with the R package **mobvis**.
-
-Besides **mobvis**, the R package **tmap** is required, which is used to plot spatial data. The **tmap** package is already used under the hood in **mobvis**, but we will also use it to explore spatial objects in general. 
+The simulator software is a framework to run mobile network data micro-simulations [1]. In this vignette, we describe how the results can be plotted with the R package **mobvis**. The package can be loaded in the standard way.
 
 ```{r}
 library(mobvis)
+```
+
+In this vignette, we will also use **tmap** [2] to explore spatial objects in general. In the following code chunk, the **tmap** package is loaded, and via a global tmap option, warnings raised by **tmap** are suppress for plotting fictional spatial objects, i.e. that do not have a real geographic location. For this vignette, the github development version is required. This can be installed via `remotes::install_github("mtenneks/tmap")`.
+
+```{r}
 library(tmap)
 tmap_options(show.warnings = FALSE)
 ```
-
-The last code line is needed to suppress warnings raised by *tmap* for plotting fictional spatial objects, i.e. that do not have a real geographic location.
 
 
 ## Example data from the simulator
@@ -72,15 +73,29 @@ The object `cp` is the cellplan, which is an `sf` object that contains the locat
 
 The object `region` is an `sf` object that contains the borders of the region of interest.
 
+## Visualization parameters
+
+In **mobvis** the visualization settings can be retrieved, and modified via `mobvis_settings()`. It a function that generates a list of visualization settings. An overview of these settings can be seen by looking at the structure with `str()`:
+
+```{r}
+str(mobvis_settings())
+```
+
+All these settings can easily be changed, as we will demonstrate in the next examples. The visualization settings are described in the package documentation. The default settings are aimed for static maps. There are also default settings for interactive maps and for animations, which can be called via the functions `mobvis_settings_interactive()` and `mobvis_settings_animation()` respectively.
+
+
 ## Signal strength
 
 The following function reads the signal strength and signal dominance data into R:
 
 ```{r, fig.show="hold", out.width="80%"}
 strength <- sim_get_signal_strength(sim, rst, cp)
+print(strength)
 ```
 
-The maps are created in the same way as with **mobloc** data as described in the other vignette. Recall that `mobvis_settings()` is a function that generated a list of visualization settings, that can be changed, as the following examples show.
+The columns of `strength` are: cell id number `cell`, tile number `rid`, signal strength `dBm`, and signal dominance `s`.
+
+The maps are created in the same way as with **mobloc** data as described in the other vignette.
 
 ```{r, fig.show="hold", out.width="80%"}
 map_sig_strength(rst, 
@@ -119,16 +134,23 @@ The last map, the Best Server Map shows the cell with the best signal strength p
 
 ## Event location
 
-The following function visualizes the event location. The event location (likelihood) probabilities are calculated with **mobloc** (see other vignette).
+The function `map_pag` visualizes the event location. The event location (likelihood) probabilities are calculated with **mobloc** (see other vignette).
 
 
 ```{r}
-# Calculate the event location (likelihood) probabilities using mobloc
 library(mobloc)
 param <- mobloc_param()
 strength[, dist:= NA]
 strength_llh <- create_strength_llh(strength, param = param)
+print(strength_llh)
+```
 
+The **mobloc** requires the signal strength object strength with an additional column `dist`, which stands for distance between tile center and cell location. However, since we do not use `dist` for viusalization purposes, we set it to `NA`. The `data.table` object `strength_llh` has four columns cell id number `cell`, tile number `rid`, distance `dist` (not used), and event location (likelihood) probability `pag`.
+
+In the next code chunk, we set the **mobvis** parameters, and create the map in the same way as before.
+
+
+```{r}
 # Retrieve and change the visualization settings
 settings = mobvis_settings(cell_size = 2, dev_size = 2)
 settings$titles["pag"] <- "Event location"
@@ -153,7 +175,14 @@ The following function visualizes the probability location. The probabilities ar
 # Calculate the event location (likelihood) probabilities using mobloc
 network_prior <- create_network_prior(strength, rst)
 posterior <- calculate_posterior(prior = network_prior, llh = strength_llh, raster = rst)
+print(posterior)
+```
 
+The `data.table` object `posterior` has three columns, cell id `cell, tile number `rid`, and posterior probability `pga`.
+
+The map is created as follows:
+
+```{r}
 # Edit settings
 settings$titles["pga"] <- "Posterior probabilities"
 
@@ -187,8 +216,8 @@ Interactive exploration of this map allows us to focus on particular devices tha
 The following code chunk creates an animation of the event locations of the cells to which device 250 is connected. Both gif and mp4 animations can be created. The former generally creates sharper images, but is much larger in file size.
 
 
-```{r}
-(traj <- sim_get_trajectory_data(sim, device = 250))
+```{r, eval=FALSE}
+traj <- sim_get_trajectory_data(sim, device = 250)
 
 settings = mobvis_settings_animation(cell_size = 2, dev_size = 2)
 
@@ -202,11 +231,12 @@ animate_pag(rst = rst,
             filename = "event_locations_dev_%s.mp4")
 ```
 
+The `%s` in the title and filename are placements for the time and device id respectively. In this case `event_locations_dev_250.mp4` will be generated.
 
 In a similar way, an animation for the posterior probabilities is created as follows.
 
 
-```{r}
+```{r, eval=FALSE}
 animate_pga(rst = rst,
             dt = posterior,
             cp = cp,
@@ -220,11 +250,12 @@ animate_pga(rst = rst,
 
 ## HMM probabilities
 
-One of the output files of the simulator is called \code{"probabilities_network_MNO1.csv"}.
+One of the output files of the simulator is called \code{"probabilities_network_MNO1.csv"}. Since this file is very large, 539 MB, only the probabilities for three devices, including 250, have been included in this package.
 
 
-```{r}
-(prob <- sim_get_prob(sim, device = 250))
+
+```{r, eval=FALSE}
+prob <- sim_get_prob(sim, device = 250)
 
 animate_p(rst = rst,
           dt = prob,
@@ -243,4 +274,5 @@ animate_p(rst = rst,
 ## References
 
 1. To do: add reference simulator documentation 
-
+2. Tennekes M (2018). “tmap: Thematic Maps in R.” _Journal of Statistical Software_, *84*(6), 1-39. doi:
+10.18637/jss.v084.i06 (URL: https://doi.org/10.18637/jss.v084.i06).

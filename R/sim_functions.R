@@ -43,19 +43,19 @@ sim_get_raster <- function(sim) {
 #' @rdname sim_data
 #' @export
 sim_get_cellplan <- function(sim) {
-    cellplanxml <- xml2::as_list(xml2::read_xml(file.path(sim$input_dir, "antennas.xml")))
-    cp = tibble::as_tibble(cellplanxml) %>%
-        tidyr::unnest_wider(antennas) %>%
-        tidyr::unnest(cols = names(.)) %>%
-        tidyr::unnest(cols = names(.)) %>%
-        readr::type_convert() %>%
-        dplyr::mutate(x2 = x,
-                      y2 = y,
-                      cell = 1:dplyr::n(),
-                      small = FALSE) %>%
-        st_as_sf(coords = c("x2", "y2"), crs = sim$crs)
-
-    #ant = read.csv(file.path(sim$output_dir, "antennas.csv"))
+    suppressMessages({
+        cellplanxml <- xml2::as_list(xml2::read_xml(file.path(sim$input_dir, "antennas.xml")))
+        cp = tibble::as_tibble(cellplanxml) %>%
+            tidyr::unnest_wider(antennas) %>%
+            tidyr::unnest(cols = names(.)) %>%
+            tidyr::unnest(cols = names(.)) %>%
+            readr::type_convert() %>%
+            dplyr::mutate(x2 = x,
+                          y2 = y,
+                          cell = 1:dplyr::n(),
+                          small = FALSE) %>%
+            st_as_sf(coords = c("x2", "y2"), crs = sim$crs)
+    })
     cp
 }
 
@@ -64,14 +64,15 @@ sim_get_cellplan <- function(sim) {
 #' @rdname sim_data
 #' @export
 sim_get_signal_strength <- function(sim, rst, cp) {
-    x <- readr::read_csv(file.path(sim$output_dir, paste0("SignalMeasure_", sim$mno, ".csv"))) %>%
+    suppressMessages({
+        readr::read_csv(file.path(sim$output_dir, paste0("SignalMeasure_", sim$mno, ".csv")), progress = FALSE) %>%
         dplyr::rename(cell = "Antenna ID") %>%
         tidyr::pivot_longer(-cell, names_to = "rid", values_to = "dBm") %>%
         dplyr::mutate(rid = as.integer(substr(rid, 5, nchar(rid)))) %>%
         dplyr::left_join(cp %>% st_drop_geometry() %>% dplyr::select(cell, Smid, SSteep), by = "cell") %>%
         dplyr::mutate(s = mobloc::db2s(dBm = dBm, midpoint = Smid, steepness = SSteep)) %>%
         dplyr::select(cell, rid, dBm, s) %>%
-        as.data.table()
+        as.data.table()})
 }
 
 #' @name sim_get_trajectory_data
@@ -79,7 +80,7 @@ sim_get_signal_strength <- function(sim, rst, cp) {
 #' @export
 sim_get_trajectory_data <- function(sim, device = NULL) {
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
-    x <- readr::read_csv(f)
+    x <- suppressMessages(readr::read_csv(f, progress = FALSE))
 
     if (is.null(device)) {
         device <- unique(x$`Device ID`)
@@ -99,9 +100,11 @@ sim_get_trajectory_data <- function(sim, device = NULL) {
 #' @export
 sim_get_trajectory_routes <- function(sim, device = NULL) {
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
-    x <- readr::read_csv(f) %>%
-        dplyr::rename(cell = 2, event = 3, dev = 4, tile = 7) %>%
-        dplyr::select(t, cell, dev, x, y)
+    x <- suppressMessages({
+        readr::read_csv(f, progress = FALSE) %>%
+            dplyr::rename(cell = 2, event = 3, dev = 4, tile = 7) %>%
+            dplyr::select(t, cell, dev, x, y)
+    })
 
     if (is.null(device)) {
         device <- unique(x$dev)
@@ -127,7 +130,7 @@ sim_get_trajectory_routes <- function(sim, device = NULL) {
 #' @export
 sim_devices_at_t <- function(sim, t) {
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
-    x <- readr::read_csv(f)
+    x <- suppressMessages(readr::read_csv(f, progress = FALSE))
 
     if (!(t %in% x$t)) stop("No records found for t = ", t, " in ", f)
 

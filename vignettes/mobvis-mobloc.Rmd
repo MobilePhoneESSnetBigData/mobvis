@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 The **mobloc** package is used to approximate geographic location given the connection between a mobile device and the cell (an antenna may contain multiple cells). This is done by a physical model of signal strength and a Bayesian method to estimate the location of mobile devices. The latter is done by applying Bayes' formula
 
-$P(g|a) \~ P(g)P(a|g)$
+$P(g|a) \sim P(g)P(a|g)$
 
 where 
 

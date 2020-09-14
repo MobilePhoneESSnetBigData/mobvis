@@ -286,7 +286,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                 if (input$show == "grid" && type == "none") {
                     rst <- NULL
                 } else if (input$show == "grid") {
-                    rst <- create_q_raster(raster, type = type, prior = prior, coverage_map_dBm, coverage_map_s, bsm)
+                    rst <- create_q_raster(raster, type = type, prior = prior, coverage_map_dBm, coverage_map_s, bsm, settings = settings)
                 } else {
                     if (type %in% c("bsm", "pg", "pag", "pga")) {
                         llh <- get_llh()
@@ -308,7 +308,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                             dt <- llh[cell == sel]
                         }
                         cpsel <- cp[cp$sel == 2L, ]
-                        rst <- create_p_raster(raster, dt, type = type, prior = prior, ta, param, cpsel)
+                        rst <- create_p_raster(raster, dt, type = type, prior = prior, ta, param, cpsel, settings = settings)
                     }
                 }
 
@@ -338,7 +338,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
 }
 
 
-create_q_raster <- function(rst, type, prior, cm_dBm, cm_s, bsm) {
+create_q_raster <- function(rst, type, prior, cm_dBm, cm_s, bsm, settings) {
     #rindex <- raster::getValues(rst)
     #r <- raster::raster(rst)
 
@@ -354,10 +354,10 @@ create_q_raster <- function(rst, type, prior, cm_dBm, cm_s, bsm) {
     }
 
 
-    raster::trim(r)
+    if (!is.na(settings$prob_th)) raster::trim(r)
 }
 
-create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel) {
+create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel, settings) {
     dBm <- s <- pag <- pg <- pga <- TA <- NULL
 
     rindex <- raster::getValues(rst)
@@ -407,7 +407,7 @@ create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel) {
     if (nrow(dt)==0) return(r)
 
     raster::values(r)[match(dt$rid, rindex)] <- dt$x
-    r <- raster::trim(r)
+    if (!is.na(settings$prob_th)) r <- raster::trim(r)
     r
 }
 

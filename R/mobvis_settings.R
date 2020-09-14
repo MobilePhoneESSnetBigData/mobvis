@@ -20,6 +20,8 @@
 #' @param use_classes logical that determines whether the signal strength (dBm) and dominance (s) should be plot in classes (default) or using a sequential palette. The classes are defined by dBm_classes and s_classes
 #' @param dBm_classes list that defines the classes for the signal strength
 #' @param s_classes list that defines the classes for the signal dominance
+#' @param prob_th probability threshold, i.e. tiles with probabilities lower than \code{prob_th} are not colored. By default 1e-06 for interactive maps and \code{NA} otherwise, meaning that all tiles are colored.
+#' @param bg.color background color (for static maps only)
 #' @param basemaps basemap(s) for interactive maps (see leaflet::providers and \url{https://leaflet-extras.github.io/leaflet-providers/preview/} for options). It can also be a vector of basemaps. In that case, the user can switch between them. If the CRS is missing in the spatial objects, the basemaps are turned off.
 #' @param ... passed on to mobvis_settings
 #' @export
@@ -33,13 +35,13 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
                                     pga = "Location posterior - P(g|a)"),
                          palettes = list(
                              dBm = "YlGnBu",
-                             s = "-YlGnBu",
+                             s = "YlGnBu",
                              bsm = "Set2",
-                             pg = "-YlGnBu",
-                             pag = "-YlGn",
-                             pga = "-YlOrBr"
+                             pg = "YlGnBu",
+                             pag = "YlGn",
+                             pga = "YlOrBr"
                          ),
-                         palette = "-YlGnBu",
+                         palette = "YlGnBu",
                          style = "pretty",
                          cell_colors = c("Selected" = "red", "Small cell" = "black", "Normal cell" = "black"),
                          cell_size = .5,
@@ -63,6 +65,8 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
                                              labels = paste(sprintf("%.1f", seq(0, 1, by = .1)[1:10]), "to", sprintf("%.1f", seq(0, 1, by = .1)[2:11])),
                                              colors = RColorBrewer::brewer.pal(10, "Spectral"),
                                              lims = c(0, 1)),
+                         prob_th = NA,
+                         bg.color = "grey90",
                          basemaps = "OpenStreetMap") {
     as.list(environment())
 }
@@ -70,11 +74,13 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
 #' @export
 #' @name mobvis_settings_interactive
 #' @rdname mobvis_settings
-mobvis_settings_interactive <- function(cell_colors = c("Selected" = "red", "Small cell" = "goldenrod3", "Normal cell" = "gold"),
-                                   cell_offset = 150,
-                                   cell_legend = TRUE,
-                                   region.lwd = 2,
-                                   ...) {
+mobvis_settings_interactive <- function(palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "Set2", pg = "-YlGnBu", pag = "-YlGn", pga = "-YlOrBr"),
+                                        cell_colors = c("Selected" = "red", "Small cell" = "goldenrod3", "Normal cell" = "gold"),
+                                        cell_offset = 150,
+                                        cell_legend = TRUE,
+                                        region.lwd = 2,
+                                        prob_th = 1e-06,
+                                        ...) {
     do.call(mobvis_settings, c(list(cell_colors = cell_colors, cell_offset = cell_offset, cell_legend = cell_legend, region.lwd = region.lwd), list(...)))
 }
 

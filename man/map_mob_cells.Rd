@@ -25,7 +25,7 @@ map_mob_cells(
 
 \item{rst}{raster data}
 
-\item{var}{if specified, \code{title} and \code{palette} are specified accordingly. Possible values: \code{"dBm", "s", "pga", "pag", "pg", "bsm"}.}
+\item{var}{if specified, \code{title} and \code{palette} are specified accordingly. Possible values: \code{"dBm", "s", "pga", "pag", "pg", "p", "bsm"}.}
 
 \item{title}{title}
 

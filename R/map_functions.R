@@ -24,7 +24,7 @@ map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL,
 
     dtsel <- dt[cell %in% cells, ][, list(dBm = max(dBm), s = max(s)), by = rid]
 
-    p = create_p_raster(rst, dtsel, type = type)
+    p = create_p_raster(rst, dtsel, type = type, settings = settings)
 
 
     if (is.null(region)) {
@@ -76,13 +76,13 @@ map_pg <- function(rst, cp, region = NULL, dev = NULL, interactive = TRUE, title
 map_p <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interactive = TRUE, title = NA, settings = mobvis_settings(), ...) {
     cells_highlight <- if (is.na(cells[1])) character() else cells
 
-    p = create_p_raster(rst, dt, type = "p")
+    p = create_p_raster(rst, dt, type = "p", settings = settings)
 
     if (is.null(region)) {
         region <- create_bbx_rect(raster2bbx(rst))
     }
 
-    map_mob_cells(cp, p, region = region, cells = cells_highlight, dev = dev, interactive = interactive, title = title, settings = settings, ...)
+    map_mob_cells(cp, p, var = "p", region = region, cells = cells_highlight, dev = dev, interactive = interactive, title = title, settings = settings, ...)
 }
 
 
@@ -98,7 +98,7 @@ map_pag <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interact
 
     dtsel <- dt[cell %in% cells, ][, list(pag = max(pag)), by = rid]
 
-    p = create_p_raster(rst, dtsel, type = type)
+    p = create_p_raster(rst, dtsel, type = type, settings = settings)
 
     if (is.null(region)) {
         region <- create_bbx_rect(raster2bbx(rst))
@@ -120,7 +120,7 @@ map_pga <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interact
 
     dtsel <- dt[cell %in% cells, ][, list(pga = max(pga)), by = rid]
 
-    p = create_p_raster(rst, dtsel, type = type)
+    p = create_p_raster(rst, dtsel, type = type, settings = settings)
 
     if (is.null(region)) {
         region <- create_bbx_rect(raster2bbx(rst))
