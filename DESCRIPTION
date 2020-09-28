@@ -6,7 +6,7 @@ Authors@R: c(person("Martijn", "Tennekes", email="mtennekes@gmail.com", role=c("
 Description: Visualization of mobile phone location algorithm results
 License: EUPL
 LazyData: true
-Date: 2020-09-14
+Date: 2020-09-28
 Depends:
     R (>= 3.5)
 Imports:
@@ -36,7 +36,7 @@ Suggests:
     lwgeom,
 	rmarkdown,
     knitr
-URL: https://github.com/MobilePhoneESSnetBigData/mobloc
-BugReports: https://github.com/MobilePhoneESSnetBigData/mobloc/issues
+URL: https://github.com/MobilePhoneESSnetBigData/mobvis
+BugReports: https://github.com/MobilePhoneESSnetBigData/mobvis/issues
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
