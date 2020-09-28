@@ -31,7 +31,7 @@ prior_to_df <- function(prior, raster) {
 #' @import tmap
 #' @import sf
 #' @importFrom dplyr rename select filter mutate left_join
-#' @importFrom tidyr unnest_wider unnest pivot_longer
+#' @importFrom tidyr unnest_wider unnest pivot_longer starts_with
 #' @import readr
 #' @importFrom raster raster setValues brick extent crop extract coordinates
 #' @import data.table
@@ -358,7 +358,7 @@ create_q_raster <- function(rst, type, prior, cm_dBm, cm_s, bsm, settings) {
 }
 
 create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel, settings) {
-    dBm <- s <- pag <- pg <- pga <- TA <- NULL
+    dBm <- s <- pag <- pg <- pga <- TA <- x <- rid <- NULL
 
     rindex <- raster::getValues(rst)
     r <- raster::raster(rst)
@@ -415,6 +415,3 @@ create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel, settings) {
 fN <- function(x) {
     formatC(x, big.mark = ",", format = "f", digits = 0)
 }
-
-
-

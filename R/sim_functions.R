@@ -10,6 +10,7 @@
 #' @param th probability threshold. Only probabilities of at least `th` are returned
 #' @export
 #' @name sim_get_region
+#' @importFrom utils read.csv
 #' @rdname sim_data
 sim_get_region <- function(sim) {
     x <- st_as_sfc(readLines(file.path(sim$input_dir, "map.wkt")))
@@ -23,7 +24,7 @@ sim_get_region <- function(sim) {
 #' @rdname sim_data
 #' @export
 sim_get_raster <- function(sim) {
-    grd = read.csv(file.path(sim$output_dir, "grid.csv"))
+    grd = utils::read.csv(file.path(sim$output_dir, "grid.csv"))
     rst = raster(nrows = grd$No.Tiles.Y,
                  ncols = grd$No.Tiles.X,
                  xmn = grd$Origin.X,
@@ -43,9 +44,11 @@ sim_get_raster <- function(sim) {
 #' @rdname sim_data
 #' @export
 sim_get_cellplan <- function(sim) {
+    antennas <- . <- x <- y <- NULL
+
     suppressMessages({
         cellplanxml <- xml2::as_list(xml2::read_xml(file.path(sim$input_dir, "antennas.xml")))
-        cp = tibble::as_tibble(cellplanxml) %>%
+        cp = tidyr::as_tibble(cellplanxml) %>%
             tidyr::unnest_wider(antennas) %>%
             tidyr::unnest(cols = names(.)) %>%
             tidyr::unnest(cols = names(.)) %>%
@@ -64,6 +67,7 @@ sim_get_cellplan <- function(sim) {
 #' @rdname sim_data
 #' @export
 sim_get_signal_strength <- function(sim, rst, cp) {
+    cell <- rid <- Smid <- SSteep <- dBm <- s <- NULL
     suppressMessages({
         readr::read_csv(file.path(sim$output_dir, paste0("SignalMeasure_", sim$mno, ".csv")), progress = FALSE) %>%
         dplyr::rename(cell = "Antenna ID") %>%
@@ -79,6 +83,8 @@ sim_get_signal_strength <- function(sim, rst, cp) {
 #' @rdname sim_data
 #' @export
 sim_get_trajectory_data <- function(sim, device = NULL) {
+    cell <- dev <- y <- NULL
+
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
     x <- suppressMessages(readr::read_csv(f, progress = FALSE))
 
@@ -99,6 +105,8 @@ sim_get_trajectory_data <- function(sim, device = NULL) {
 #' @rdname sim_data
 #' @export
 sim_get_trajectory_routes <- function(sim, device = NULL) {
+    cell <- dev <- NULL
+
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
     x <- suppressMessages({
         readr::read_csv(f, progress = FALSE) %>%
@@ -129,6 +137,8 @@ sim_get_trajectory_routes <- function(sim, device = NULL) {
 #' @rdname sim_data
 #' @export
 sim_devices_at_t <- function(sim, t) {
+    time <- cell <- dev <- y <- NULL
+
     f <- file.path(sim$output_dir, paste0("AntennaInfo_MNO_", sim$mno, ".csv"))
     x <- suppressMessages(readr::read_csv(f, progress = FALSE))
 
@@ -154,12 +164,14 @@ sim_devices_at_t <- function(sim, t) {
 #' @rdname sim_data
 #' @export
 sim_get_prob <- function(sim, device, th = 1e-6) {
+    dev <- rid <- NULL
+
     p <- fread(file.path(sim$output_dir, paste0("probabilities_network_", sim$mno,".csv")))
     setnames(p, "Phone ID", "dev")
     psel <- p[dev %in% device, ] %>%
         tidyr::as_tibble() %>%
         tidyr::pivot_longer(
-            cols = starts_with("Tile"),
+            cols = tidyr::starts_with("Tile"),
             names_to = "rid",
             values_to = "p"
         ) %>%

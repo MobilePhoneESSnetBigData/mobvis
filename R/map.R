@@ -51,11 +51,11 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
     } else {
         if (settings$cell_labels) {
             tm <- tm + tm_shape(cp) +
-                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
+                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title.col = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.col.show = cell_legend) +
                 tm_text("cell", xmod = 0.5, ymod = 0.5, col = settings$cell_label_color)
         } else {
             tm <- tm + tm_shape(cp) +
-                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
+                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title.col = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.col.show = cell_legend)
         }
 
     }

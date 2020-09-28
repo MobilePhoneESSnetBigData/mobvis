@@ -85,58 +85,9 @@ ZL_landuse_prior <- create_prior(ZL_landuse, weights = c(1, 1, .1, 0, .5))
 
 # explore the results
 explore_mobloc(ZL_cellplan, ZL_raster, ZL_strength,
-               list(landuse = ZL_landuse_prior, network = ZL_network_prior, uniform = ZL_uniform_prior),
-               list(Strength = ZL_strength_llh, Voronoi = ZL_voronoi_llh),
-               param = ZL_param)
-
-
-
-
-# prior
-cp = ZL_cellplan
-rst = raster::trim(ZL_network_prior)
-
-dt = ZL_strength[cell=="SIT_440_N3", ]
-
-rst = create_p_raster(ZL_raster, dt, "s")
-
-map_mob_cells(cp, rst, title = "Test", interactive = FALSE)
-
-
-
-# mobloc
-map_sig_strength(rst = ZL_raster, dt = ZL_strength, cp = ZL_cellplan, cells = c("BEE_150_N1", "BEE_150_N2"), region = ZL_muni, type = "dBm")
-
-
-map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, type = c("dBm", "s"), interactive = TRUE) {
-    if (is.na(cells[1])) cells <- dt$cell
-
-    dtsel <- dt[cell \%in\% cells, ][, list(dBm = max(dBm), s = max(s)), by = rid]
-
-    p = create_p_raster(rst, dtsel, type = type)
-    map_mob_cells(cp, p, var = type, borders = region, interactive = interactive)
-}
-
-
-
-
-cp = ZL_cellplan
-rst = raster::trim(ZL_network_prior)
-
-dt = ZL_strength[cell=="SIT_440_N3", ]
-
-rst = create_p_raster(ZL_raster, dt, "s")
-
-map_mob_cells(cp, rst, title = "Test", interactive = FALSE)
-
-
-create_p_raster()
-
-
-map_mob_cells(cp, rst, title = "Test")
-
-
-
+  list(landuse = ZL_landuse_prior, network = ZL_network_prior, uniform = ZL_uniform_prior),
+       list(Strength = ZL_strength_llh, Voronoi = ZL_voronoi_llh),
+       param = ZL_param)
 }
 }
 \seealso{

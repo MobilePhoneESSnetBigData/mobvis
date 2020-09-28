@@ -111,6 +111,7 @@ animate_mob <- function(rst,
                         fps = 3,
                         var = c("pag", "pga", "p")) {
 
+    cell <- NULL
     if (!var %in% c("pag", "pga", "p")) stop("var should be pag, pga, or p")
     cells <- traj$cell
 

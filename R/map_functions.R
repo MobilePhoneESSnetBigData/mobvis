@@ -17,6 +17,8 @@
 #' @name map_sig_strength
 #' @export
 map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, type = c("dBm", "s"), interactive = TRUE, title = NA, settings = mobvis_settings(), ...) {
+    cell <- dBm <- s <- rid <- NULL
+
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
 
@@ -38,6 +40,8 @@ map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL,
 #' @name map_bast_server
 #' @export
 map_best_server <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, type = c("dBm", "s"), interactive = TRUE, title = NA, settings = mobvis_settings(), ...) {
+
+    cell <- pag <- dBm <- NULL
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
 
@@ -90,6 +94,9 @@ map_p <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interactiv
 #' @name map_pag
 #' @export
 map_pag <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interactive = TRUE, title = NA, settings = mobvis_settings(), ...) {
+
+    cell <- pag <- rid <- NULL
+
     type <- "pag"
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
@@ -112,6 +119,8 @@ map_pag <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interact
 #' @name map_pga
 #' @export
 map_pga <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interactive = TRUE, title = NA, settings = mobvis_settings(), ...) {
+    cell <- pga <- rid <- NULL
+
     type <- "pga"
 
     cells_highlight <- if (is.na(cells[1])) character() else cells

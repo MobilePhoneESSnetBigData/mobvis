@@ -11,10 +11,12 @@ distance_plot(W = 5, ple = 5, range = 1000, show_classes = TRUE)
 
 
 ########################
-### signal_dominance: plot the relation between signal strength and the signal dominance, which is an indicator between 0 and 1 which represents the (modeled) value of connection
+### signal_dominance: plot the relation between signal strength and the signal dominance,
+### which is an indicator between 0 and 1 which represents the (modeled) value of connection
 ########################
 
-# The default parameter values. The colors classes indicate the value of connection: from red (no/hardly connectivity, to yellow (fair connectivity) to blue/purple (excellent connectivity).
+# The default parameter values. The colors classes indicate the value of connection: from red
+# (no/hardly connectivity, to yellow (fair connectivity) to blue/purple (excellent connectivity).
 signal_dominance_plot(midpoint = -92.5, steepness = .2, show_classes = TRUE)
 
 # explore the steepness parameter
@@ -27,11 +29,14 @@ gridExtra::grid.arrange(
 )
 
 ########################
-### radiation_plot: plot the relation between signal strength and the signal dominance, which is an indicator between 0 and 1 which represents the (modeled) value of connection
+### radiation_plot: plot the relation between signal strength and the signal dominance,
+### which is an indicator between 0 and 1 which represents the (modeled) value of connection
 ########################
 
-# Azimuth plan pattern with a beam width of 64 degrees (so -32 and 32 degrees deviation means a signal loss of 3dB, the red dots)
+# Azimuth plan pattern with a beam width of 64 degrees
+# (so -32 and 32 degrees deviation means a signal loss of 3dB, the red dots)
 radiation_plot(type = "a", beam_width = 64, db_back = -30)
 
-# Elevation plan pattern with a beam width of 12 degrees (so -6 and 6 degrees deviation means a signal loss of 3dB, the red dots)
+# Elevation plan pattern with a beam width of 12 degrees
+# (so -6 and 6 degrees deviation means a signal loss of 3dB, the red dots)
 radiation_plot(type = "e", beam_width = 12, db_back = -30)

@@ -13,6 +13,7 @@ Imports:
     mobloc (>= 0.5),
     methods,
     stats,
+    utils,
     graphics,
     sf (>= 0.6-3),
     RColorBrewer,
@@ -26,12 +27,15 @@ Imports:
     ggplot2,
     gridExtra,
     leaflet,
-    raster
+    raster,
+    readr,
+    dplyr,
+    tidyr,
+    tmap (>= 3.2)
 Suggests:
     lwgeom,
 	rmarkdown,
-    knitr,
-    tmap (>= 3.2)
+    knitr
 URL: https://github.com/MobilePhoneESSnetBigData/mobloc
 BugReports: https://github.com/MobilePhoneESSnetBigData/mobloc/issues
 VignetteBuilder: knitr
