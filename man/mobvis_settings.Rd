@@ -46,7 +46,7 @@ mobvis_settings_interactive(
   cell_offset = 150,
   cell_legend = TRUE,
   region.lwd = 2,
-  prob_th = 1e-06,
+  prob_th = 1e-15,
   ...
 )
 

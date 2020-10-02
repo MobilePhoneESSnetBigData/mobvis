@@ -79,9 +79,9 @@ mobvis_settings_interactive <- function(palettes = list(dBm = "YlGnBu", s = "-Yl
                                         cell_offset = 150,
                                         cell_legend = TRUE,
                                         region.lwd = 2,
-                                        prob_th = 1e-06,
+                                        prob_th = 1e-15,
                                         ...) {
-    do.call(mobvis_settings, c(list(cell_colors = cell_colors, cell_offset = cell_offset, cell_legend = cell_legend, region.lwd = region.lwd), list(...)))
+    do.call(mobvis_settings, c(list(palettes = palettes, cell_colors = cell_colors, cell_offset = cell_offset, cell_legend = cell_legend, region.lwd = region.lwd, prob_th = prob_th), list(...)))
 }
 
 #' @export

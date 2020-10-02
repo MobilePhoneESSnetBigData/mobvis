@@ -15,7 +15,8 @@ explore_mobloc(
   coverage_map_dBm = NULL,
   coverage_map_s = NULL,
   best_server_map = NULL,
-  settings = mobvis_settings_interactive()
+  settings = mobvis_settings_interactive(),
+  height = 600
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ explore_mobloc(
 \item{best_server_map}{best server map, created with \code{\link{create_best_server_map}}. If not specified, it will be created (which takes some time).}
 
 \item{settings}{mobvis settings, see \code{\link{mobvis_settings}}}
+
+\item{height}{height of the map in pixels}
 }
 \description{
 Explore the visualize propagation, prior, connection likelihood and location posterior probabilities per raster tile. When the raster is large (say larger than 30 by 30 kilometers), we recommend to specify the filter arguemnt.
@@ -87,7 +90,7 @@ ZL_landuse_prior <- create_prior(ZL_landuse, weights = c(1, 1, .1, 0, .5))
 explore_mobloc(ZL_cellplan, ZL_raster, ZL_strength,
   list(landuse = ZL_landuse_prior, network = ZL_network_prior, uniform = ZL_uniform_prior),
        list(Strength = ZL_strength_llh, Voronoi = ZL_voronoi_llh),
-       param = ZL_param)
+      param = ZL_param)
 }
 }
 \seealso{

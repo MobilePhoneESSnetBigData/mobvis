@@ -131,28 +131,35 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
             values <- rst[]
 
             if (var %in% c("pga", "pg", "pag", "p")) {
-                if (is.na(settings$prob_th)) values[is.na(values)] <- 0
-            } else {
-                values[values < settings$prob_th] <- NA
+                if (is.na(settings$prob_th)) {
+                    values[is.na(values)] <- 0
+                } else {
+                    values[values < settings$prob_th] <- NA
+                }
             }
+            if (all(is.na(values))) {
+                rst[] <- NA
+                appendix <- ""
 
-            maxv <- max(values, na.rm = TRUE)
-            minv <- min(values, na.rm = TRUE)
-            allOnes <- (minv > .999 && maxv <= 1.001)
-            inThousands <- (maxv > 0.01 && maxv < 0.1 && minv >= 0)
-            inMillions <- (maxv <= 0.01 && minv >= 0)
-            if (allOnes && is.na(title)) {
-                values2 <- 1
-                #values <- pmin(pmax(rst[], 0), 1)
-            } else if (inThousands && is.na(title)) {
-                values2 <- values * 1000
-            } else if (inMillions && is.na(title)) {
-                values2 <- values * 1000000
             } else {
-                values2 <- values
+                maxv <- max(values, na.rm = TRUE)
+                minv <- min(values, na.rm = TRUE)
+                allOnes <- (minv > .999 && maxv <= 1.001)
+                inThousands <- (maxv > 0.01 && maxv < 0.1 && minv >= 0)
+                inMillions <- (maxv <= 0.01 && minv >= 0)
+                if (allOnes && is.na(title)) {
+                    values2 <- 1
+                    #values <- pmin(pmax(rst[], 0), 1)
+                } else if (inThousands && is.na(title)) {
+                    values2 <- values * 1000
+                } else if (inMillions && is.na(title)) {
+                    values2 <- values * 1000000
+                } else {
+                    values2 <- values
+                }
+                rst[] <- values2
+                appendix <- ifelse(allOnes || (!inThousands && !inMillions), "", paste0(line_br, "(in 1 / ", ifelse(inThousands, "1,000", "1,000,000"), ")"))
             }
-            rst[] <- values2
-            appendix <- ifelse(allOnes || (!inThousands && !inMillions), "", paste0(line_br, "(in 1 / ", ifelse(inThousands, "1,000", "1,000,000"), ")"))
         }
 
         if (is.na(title)) {
@@ -181,6 +188,8 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
             if (var == "bsm") {
                 tm <- tm + tm_layout(main.title = title)
             }
+        } else {
+            tm <- list()
         }
 
     } else {

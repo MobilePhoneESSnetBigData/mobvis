@@ -25,6 +25,7 @@ prior_to_df <- function(prior, raster) {
 #' @param coverage_map_s coverage map, created with \code{\link{create_coverage_map}} (with \code{type = "s"}). If not specified, it will be created (which takes some time).
 #' @param best_server_map best server map, created with \code{\link{create_best_server_map}}. If not specified, it will be created (which takes some time).
 #' @param settings mobvis settings, see \code{\link{mobvis_settings}}
+#' @param height height of the map in pixels
 #' @note Note that duo to the reprojection of the raster to the web mercator projection (for interactive maps), the visualized raster does not correspond exactly to the output raster.
 #' @import shiny
 #' @importFrom shinyjs useShinyjs disable
@@ -38,7 +39,7 @@ prior_to_df <- function(prior, raster) {
 #' @example ./examples/explore_mobloc.R
 #' @seealso \href{../doc/mobloc.html}{\code{vignette("mobloc")}}
 #' @export
-explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filter = NULL, coverage_map_dBm = NULL, coverage_map_s = NULL, best_server_map = NULL, settings = mobvis_settings_interactive()) {
+explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filter = NULL, coverage_map_dBm = NULL, coverage_map_s = NULL, best_server_map = NULL, settings = mobvis_settings_interactive(), height = 600) {
 
 
     if (!missing(filter)) {
@@ -156,7 +157,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                                  dataTableOutput("cellinfo"))
                     )),
                 mainPanel(
-                    tmapOutput("map", height=600)
+                    tmapOutput("map", height=height)
                 ))
         ),
         server = function(input, output, session) {
