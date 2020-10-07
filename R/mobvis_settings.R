@@ -3,7 +3,7 @@
 #' Settings of mobvis. The default values of \code{mobvis_settings} are aimed for interactive maps, whereas the values for \code{mobvis_settings_static} are aimed for statis maps.
 #'
 #' @param titles default titles. Named character vector, where the names should be dBm, s, bsm, pag, pg and pga.
-#' @param palettes default palettes. Should be a list with the elements called: dBm, s, bsm, pag, pg and pga.
+#' @param palettes default palettes. Should be a list with the elements called: dBm, s, bsm, pag, pg and pga. The options for each palette are: a vector of colors, a ColorBrewer name, a viridis name (see \code{\link[tmaptools:palette_explorer]{palette_explorer}}). For \code{"bsm"} there are three more options: \code{"hcl"}, \code{"rainbow"}, and \code{"PairedSet2"}. The last option refers to two ColorBrewer palettes combined.
 #' @param palette default palette for non-standard plots
 #' @param style the style of the color classes, e.g. "pretty" for pretty rounded breaks, and "cont" for continuous classes. See the \code{style} argument of \code{\link[tmap:tm_raster]{tm_raster}} for all options.
 #' @param cell_colors either a single color for all cells, or a vector of colors named: Selected, Small cell and Normal cell
@@ -74,7 +74,7 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
 #' @export
 #' @name mobvis_settings_interactive
 #' @rdname mobvis_settings
-mobvis_settings_interactive <- function(palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "Set2", pg = "-YlGnBu", pag = "-YlGn", pga = "-YlOrBr"),
+mobvis_settings_interactive <- function(palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "PairedSet2", pg = "-YlGnBu", pag = "-YlGn", pga = "-YlOrBr"),
                                         cell_colors = c("Selected" = "red", "Small cell" = "goldenrod3", "Normal cell" = "gold"),
                                         cell_offset = 150,
                                         cell_legend = TRUE,

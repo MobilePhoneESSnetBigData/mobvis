@@ -1,2 +1,6 @@
+version 0.1.1
+- improved color palettes for bsm maps
+- added option to show prob=0 values
+
 version 0.1.0
 - initial version

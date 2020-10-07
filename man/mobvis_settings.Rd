@@ -39,8 +39,8 @@ mobvis_settings(
 )
 
 mobvis_settings_interactive(
-  palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "Set2", pg = "-YlGnBu", pag =
-    "-YlGn", pga = "-YlOrBr"),
+  palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "PairedSet2", pg = "-YlGnBu",
+    pag = "-YlGn", pga = "-YlOrBr"),
   cell_colors = c(Selected = "red", `Small cell` = "goldenrod3", `Normal cell` =
     "gold"),
   cell_offset = 150,
@@ -55,7 +55,7 @@ mobvis_settings_animation(style = "cont", ...)
 \arguments{
 \item{titles}{default titles. Named character vector, where the names should be dBm, s, bsm, pag, pg and pga.}
 
-\item{palettes}{default palettes. Should be a list with the elements called: dBm, s, bsm, pag, pg and pga.}
+\item{palettes}{default palettes. Should be a list with the elements called: dBm, s, bsm, pag, pg and pga. The options for each palette are: a vector of colors, a ColorBrewer name, a viridis name (see \code{\link[tmaptools:palette_explorer]{palette_explorer}}). For \code{"bsm"} there are three more options: \code{"hcl"}, \code{"rainbow"}, and \code{"PairedSet2"}. The last option refers to two ColorBrewer palettes combined.}
 
 \item{palette}{default palette for non-standard plots}
 

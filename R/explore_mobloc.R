@@ -30,6 +30,7 @@ prior_to_df <- function(prior, raster) {
 #' @import shiny
 #' @importFrom shinyjs useShinyjs disable
 #' @import tmap
+#' @import viridisLite
 #' @import sf
 #' @importFrom dplyr rename select filter mutate left_join
 #' @importFrom tidyr unnest_wider unnest pivot_longer starts_with
@@ -86,6 +87,9 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                  "Location posterior - P(g|a)" = "pga")
 
 
+    prob_th_na = is.na(settings$prob_th)
+    prob_th = ifelse(prob_th_na, 1e-15, settings$prob_th)
+
     #https://stackoverflow.com/questions/34733147/unable-to-disable-a-shiny-app-radio-button-using-shinyjs
 
     cells <- as.character(cp$cell)
@@ -137,7 +141,8 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                                             h3("Map Setup"),
                                             radioButtons("show", "Selection",  c("All cells" = "grid", "Single cell" = "ant"), selected = "grid"),
                                             radioButtons("var", "Show", choices, selected = "none"),
-                                            sliderInput("trans", "Transparency", min = 0, max = 1, value = 1, step = 0.1)),
+                                            sliderInput("trans", "Transparency", min = 0, max = 1, value = 1, step = 0.1),
+                                            checkboxInput("prob0", "Show probality = 0", value = prob_th_na)),
                                      column(6,
                                             h3("Module Setup"),
                                             radioButtons("varP", "Location Prior", choices_prior, selected = "p1"),
@@ -165,6 +170,11 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                 show <- input$show
                 var <- input$var
                 if (show == "grid" && var %in% c("pag", "pga")) choices[1] else var
+            })
+
+            get_settings <- reactive({
+                settings$prob_th = ifelse(input$prob0, NA, prob_th)
+                settings
             })
 
 
@@ -272,6 +282,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
 
             observe({
                 type <- get_var()
+                settings <- get_settings()
                 sel <- input$sel
                 cp$sel <- 1L
                 cp$sel[cp$cell %in% sel] <- 2L

@@ -3,7 +3,7 @@
 require(mobloc)
 
 # set parameters
-ZL_param <- mobloc_param()
+ZL_param <- mobloc_param(max_overlapping_cells = 1000)
 
 # load data
 data("ZL_cellplan", "ZL_muni", "ZL_elevation", "ZL_landuse")

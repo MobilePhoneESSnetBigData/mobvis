@@ -136,6 +136,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
                 } else {
                     values[values < settings$prob_th] <- NA
                 }
+                oneValue = (length(na.omit(unique(values))) <= 1)
             }
             if (all(is.na(values))) {
                 rst[] <- NA
@@ -172,6 +173,40 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
             palette <- if (var %in% c("custom", "none", "empty", "p")) settings$palette else unname(settings$palettes[[var]])
         }
 
+        brewerNames <- c(rownames(RColorBrewer::brewer.pal.info), paste0("-", rownames(RColorBrewer::brewer.pal.info)))
+        viridisNames <- c("viridis", "magma", "plasma", "inferno", "cividis")
+        if (var == "bsm") {
+            rstmx = max(rst[], na.rm = TRUE)
+            if (palette[1] == "PairedSet2") {
+                palette = c(RColorBrewer::brewer.pal(12, "Paired"), RColorBrewer::brewer.pal(8, "Set2"))
+                palette <- rep(palette, length.out = rstmx)
+            } else if (palette[1] == "hcl") {
+                palette = hcl(h = spread(rstmx) / rstmx * 360, c = 90, l = 70)
+            } else if (palette[1] == "rainbow") {
+                palette = rainbow(rstmx)[spread(rstmx)]
+            } else if (palette[1] %in% viridisNames) {
+                palette <- do.call(palette[1], list(n = rstmx))
+            } else if (palette[1] %in% brewerNames) {
+                palette <- tmaptools::get_brewer_pal(palette[1], n = rstmx, plot = FALSE)
+            } else {
+                palette <- rep(palette, length.out = rstmx)
+            }
+            palette = palette[spread(rstmx)]
+
+        }
+
+        if (var %in% c("pga", "pg", "pag", "p")) {
+            # extract middle palette value
+            if (oneValue) {
+                if (palette[1] %in% viridisNames) {
+                    palette <- do.call(palette[1], list(n = 7))
+                } else if (palette[1] %in% brewerNames) {
+                    palette <- tmaptools::get_brewer_pal(palette[1], n = 7, plot = FALSE)
+                }
+                palette = palette[(length(palette)+1)/2]
+            }
+        }
+
         cls <- if (var == "dBm")  {
             settings$dBm_classes
         } else {
@@ -202,4 +237,24 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
     } else {
         tm + tm2 + tm_layout(legend.outside = TRUE, frame = FALSE, bg.color = settings$bg.color)
     }
+}
+
+# from treemap
+spread <- function (n)
+{
+    if (n < 5) {
+        s <- 1:n
+        if (n > 2)
+            s[2:3] <- 3:2
+    }
+    else {
+        s.step <- floor(n/(2.5))
+        s <- seq(1, by = s.step, length.out = n)
+        s <- s%%n
+        s[s == 0] <- n
+        dup <- which(duplicated(s))[1]
+        if (!is.na(dup))
+            s <- s + rep(0:(s.step - 1), each = (dup - 1), length.out = n)
+    }
+    s
 }
