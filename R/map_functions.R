@@ -66,7 +66,7 @@ map_best_server <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, 
 #' @name map_pg
 #' @export
 map_pg <- function(rst, cp, region = NULL, dev = NULL, interactive = TRUE, title = NA, settings = mobvis_settings(), ...) {
-    type <- "pag"
+    type <- "pg"
     p = rst
     if (is.null(region)) {
         region <- create_bbx_rect(raster2bbx(rst))
@@ -125,7 +125,12 @@ map_pga <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, interact
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
 
-    if (is.na(cells[1])) cells <- dt$cell
+    if (is.na(cells[1])) {
+        cells <- dt$cell
+    } else if (!any(cells %in% dt$cell)) {
+        warning("cell(s) ", cells, " not found in dt$cell")
+        cells <- dt$cell
+    }
 
     dtsel <- dt[cell %in% cells, ][, list(pga = max(pga)), by = rid]
 

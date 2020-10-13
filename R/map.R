@@ -37,25 +37,25 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
 
     if (settings$cell_offset > 0) {
         tm <- tm + tm_shape(cp_lines) +
-            tm_lines(col = "#777777", lwd = 3 + sqrt(settings$cell_size), group = "Cell locations", interactive = FALSE, zindex = 401)
+            tm_lines(col = "#777777", lwd = settings$cell_lwd * 3, group = "Cell locations", interactive = FALSE, zindex = 401)
 
         if (settings$cell_labels) {
             tm <- tm + tm_shape(cp2) +
-                tm_dots("sel", palette = cell_palette, size = .04 * settings$cell_size, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
                 tm_text("cell", xmod = 0.5, ymod = 0.5, col = settings$cell_label_color)
         } else {
             tm <- tm + tm_shape(cp2) +
-                tm_dots("sel", palette = cell_palette, size = .04 * settings$cell_size, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
         }
 
     } else {
         if (settings$cell_labels) {
             tm <- tm + tm_shape(cp) +
-                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title.col = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.col.show = cell_legend) +
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
                 tm_text("cell", xmod = 0.5, ymod = 0.5, col = settings$cell_label_color)
         } else {
             tm <- tm + tm_shape(cp) +
-                tm_symbols(col = "sel", palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.col = "black", group = "Cell locations", title.col = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.col.show = cell_legend)
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
         }
 
     }
@@ -134,7 +134,7 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
                 if (is.na(settings$prob_th)) {
                     values[is.na(values)] <- 0
                 } else {
-                    values[values < settings$prob_th] <- NA
+                    values[which(values < settings$prob_th)] <- NA
                 }
                 oneValue = (length(na.omit(unique(values))) <= 1)
             }
@@ -149,7 +149,8 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
                 inThousands <- (maxv > 0.01 && maxv < 0.1 && minv >= 0)
                 inMillions <- (maxv <= 0.01 && minv >= 0)
                 if (allOnes && is.na(title)) {
-                    values2 <- 1
+                    values2 <- values
+                    values2[values2 > .999 & values2 <= 1.001] <- 1
                     #values <- pmin(pmax(rst[], 0), 1)
                 } else if (inThousands && is.na(title)) {
                     values2 <- values * 1000

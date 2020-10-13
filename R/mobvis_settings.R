@@ -9,6 +9,7 @@
 #' @param cell_colors either a single color for all cells, or a vector of colors named: Selected, Small cell and Normal cell
 #' @param cell_size size of the cell(s)
 #' @param cell_shape shape of the cell(s), by default a dot. Run the last example from \code{\link[tmap:tm_symbols]{tm_symbols}} to see all options.
+#' @param cell_lwd border line width of the cells, and the lines that connect directional cells when \code{cell_offset > 0}
 #' @param cell_offset offset of the cell(s). If not 0, the cells are moved into the propagation direction
 #' @param cell_legend should the legend for the different cells be included?
 #' @param cell_labels logical that determines whether the cell labels are printed (default \code{FALSE})
@@ -46,6 +47,7 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
                          cell_colors = c("Selected" = "red", "Small cell" = "black", "Normal cell" = "black"),
                          cell_size = .5,
                          cell_shape = 19,
+                         cell_lwd = 1,
                          cell_offset = 75,
                          cell_legend = FALSE,
                          cell_labels = FALSE,
@@ -79,7 +81,7 @@ mobvis_settings_interactive <- function(palettes = list(dBm = "YlGnBu", s = "-Yl
                                         cell_offset = 150,
                                         cell_legend = TRUE,
                                         region.lwd = 2,
-                                        prob_th = 1e-15,
+                                        prob_th = 0,
                                         ...) {
     do.call(mobvis_settings, c(list(palettes = palettes, cell_colors = cell_colors, cell_offset = cell_offset, cell_legend = cell_legend, region.lwd = region.lwd, prob_th = prob_th), list(...)))
 }

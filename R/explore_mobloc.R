@@ -366,7 +366,7 @@ create_q_raster <- function(rst, type, prior, cm_dBm, cm_s, bsm, settings) {
     }
 
 
-    if (!is.na(settings$prob_th)) raster::trim(r)
+    if (!is.na(settings$prob_th)) raster::trim(r) else r
 }
 
 create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel, settings) {
@@ -420,6 +420,7 @@ create_p_raster <- function(rst, dt, type, prior, ta, param, cpsel, settings) {
 
     raster::values(r)[match(dt$rid, rindex)] <- dt$x
     if (!is.na(settings$prob_th)) r <- raster::trim(r)
+
     r
 }
 
