@@ -178,9 +178,15 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
         viridisNames <- c("viridis", "magma", "plasma", "inferno", "cividis")
         if (var == "bsm") {
             rstmx = max(rst[], na.rm = TRUE)
-            if (palette[1] == "PairedSet2") {
-                palette = c(RColorBrewer::brewer.pal(12, "Paired"), RColorBrewer::brewer.pal(8, "Set2"))
+            if (substr(palette[1], 1, 11) == "ColorBrewer") {
+                #palette = colorRampPalette(c(RColorBrewer::brewer.pal(12, "Paired"), RColorBrewer::brewer.pal(8, "Set2")))(rstmx)
+                randomize <- (nchar(palette[1]) > 11)
+
+                if (randomize) set.seed(as.numeric(substr(palette[1], 12, nchar(palette[1]))))
+
+                palette = c(RColorBrewer::brewer.pal(12, "Paired"), RColorBrewer::brewer.pal(8, "Set2"), RColorBrewer::brewer.pal(9, "Set1"), RColorBrewer::brewer.pal(12, "Set3"))
                 palette <- rep(palette, length.out = rstmx)
+                if (randomize) palette = sample(palette)
             } else if (palette[1] == "hcl") {
                 palette = hcl(h = spread(rstmx) / rstmx * 360, c = 90, l = 70)
             } else if (palette[1] == "rainbow") {

@@ -365,7 +365,6 @@ create_q_raster <- function(rst, type, prior, cm_dBm, cm_s, bsm, settings) {
         r <- prior
     }
 
-
     if (!is.na(settings$prob_th)) raster::trim(r) else r
 }
 
