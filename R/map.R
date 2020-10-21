@@ -37,25 +37,25 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
 
     if (settings$cell_offset > 0) {
         tm <- tm + tm_shape(cp_lines) +
-            tm_lines(col = "#777777", lwd = settings$cell_lwd * 3, group = "Cell locations", interactive = FALSE, zindex = 401)
+            tm_lines(col = settings$cell_connection_col, lwd = settings$cell_lwd * 3, group = "Cell locations", interactive = FALSE, zindex = 401)
 
         if (settings$cell_labels) {
             tm <- tm + tm_shape(cp2) +
-                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, border.lwd = settings$cell_lwd, border.col = settings$cell_border_col, group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
                 tm_text("cell", xmod = 0.5, ymod = 0.5, col = settings$cell_label_color)
         } else {
             tm <- tm + tm_shape(cp2) +
-                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, border.lwd = settings$cell_lwd, border.col = settings$cell_border_col, group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
         }
 
     } else {
         if (settings$cell_labels) {
             tm <- tm + tm_shape(cp) +
-                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.lwd = settings$cell_lwd, border.col = settings$cell_border_col, group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend) +
                 tm_text("cell", xmod = 0.5, ymod = 0.5, col = settings$cell_label_color)
         } else {
             tm <- tm + tm_shape(cp) +
-                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.lwd = settings$cell_lwd, border.col = "black", group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
+                tm_dots(col = "sel", shape = 21, palette = cell_palette, size = .04 * settings$cell_size, shape = settings$cell_shape, border.lwd = settings$cell_lwd, border.col = settings$cell_border_col, group = "Cell locations", title = "Cell locations", interactive = TRUE, id = "cell", popup.vars = FALSE, drop.levels = TRUE, zindex = 402, legend.show = cell_legend)
         }
 
     }
@@ -137,7 +137,13 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
                     values[which(values < settings$prob_th)] <- NA
                 }
                 oneValue = (length(na.omit(unique(values))) <= 1)
+            } else if (var == "dBm" && is.na(settings$prob_th)) {
+                    values[is.na(values)] <- -130
+            } else if (var == "s" && is.na(settings$prob_th)) {
+                values[is.na(values)] <- 0
             }
+
+
             if (all(is.na(values))) {
                 rst[] <- NA
                 appendix <- ""

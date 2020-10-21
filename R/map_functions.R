@@ -19,6 +19,7 @@
 map_sig_strength <- function(rst, dt, cp, cells = NA, region = NULL, dev = NULL, type = c("dBm", "s"), interactive = TRUE, title = NA, settings = mobvis_settings(), ...) {
     cell <- dBm <- s <- rid <- NULL
 
+    type <- match.arg(type)
 
     cells_highlight <- if (is.na(cells[1])) character() else cells
 

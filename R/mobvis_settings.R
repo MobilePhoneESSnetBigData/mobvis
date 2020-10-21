@@ -10,6 +10,8 @@
 #' @param cell_size size of the cell(s)
 #' @param cell_shape shape of the cell(s), by default a dot. Run the last example from \code{\link[tmap:tm_symbols]{tm_symbols}} to see all options.
 #' @param cell_lwd border line width of the cells, and the lines that connect directional cells when \code{cell_offset > 0}
+#' @param cell_border_col line color for the cell borders
+#' @param cell_connection_col line color for the cell connection lines between directional cells when \code{cell_offset > 0}
 #' @param cell_offset offset of the cell(s). If not 0, the cells are moved into the propagation direction
 #' @param cell_legend should the legend for the different cells be included?
 #' @param cell_labels logical that determines whether the cell labels are printed (default \code{FALSE})
@@ -48,6 +50,8 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
                          cell_size = .5,
                          cell_shape = 19,
                          cell_lwd = 1,
+                         cell_border_col = "black",
+                         cell_connection_col = "grey50",
                          cell_offset = 75,
                          cell_legend = FALSE,
                          cell_labels = FALSE,
