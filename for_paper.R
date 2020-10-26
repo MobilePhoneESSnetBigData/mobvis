@@ -378,4 +378,81 @@ image_read(paste0(outdir, "mobloc_multiples.png")) %>%
     image_write(path = paste0(outdir, "mobloc_multiples.png"))
 
 
+############# Figure 3 (TA)
+ta_bands = c(15, 25, 35)
+
+settings3 = settings2
+settings3$prob_th = 0
+
+mapply(function(prior, prior_name) {
+    mapply(function(llh, llh_name) {
+
+        ## Likelihood
+
+        ## Posterior
+        post = calculate_posterior(prior, llh, ZL_raster)
+        post_ta = update_posterior_TA(post, raster = ZL_raster, cp = ZL_cellplan, param = ZL_param, elev = ZL_elevation)
+
+        lapply(ta_bands, function(ta) {
+            post_ta_sel = post_ta[post_ta$TA == ta]
+            #browser()
+            tm = qtm(ZL_raster) +
+                tm_shape(osm2, raster.downsample = FALSE, raster.warp = FALSE) + tm_rgb() +
+                #base_tmap(ZL_cellplan, settings = settings2)
+
+                map_pga(rst = ZL_raster, dt = post_ta_sel, cells = "EIJ_769_N1", cp = ZL_cellplan, interactive = FALSE, settings = settings3) + tm_layout(legend.show = FALSE, scale = 1)
+            save_maps2(tm, paste0("post_", prior_name, "_", llh_name, "_TA", ta))
+
+        })
+    }, llhs[2], names(llhs)[2], SIMPLIFY = FALSE)
+
+}, priors[4], names(priors)[4], SIMPLIFY = FALSE)
+
+
+
+
+
+#widths = c(10, 700, 50, 700, 50, 700, 10)
+widths = c(10, 700, 50, 700, 50, 700, 10)
+heights = c(10, 510, 100)
+
+png(paste0(outdir, "mobloc_ta.png"), width = sum(widths), height = sum(heights))
+
+grid.newpage()
+
+grd = viewport(layout = grid.layout(ncol = length(widths), nrow = length(heights),
+                                    widths = widths,
+                                    heights = heights,
+                                    default.units = "native"), xscale = c(0, sum(widths)), yscale = c(0, sum(heights)),
+               gp = gpar(cex = 4.5),
+               clip = "off")
+pushViewport(grd)
+
+cellplot = function(row, col, width = 1, height = 1, e) {
+    pushViewport(viewport(layout.pos.row = row, layout.pos.col = col))
+    pushViewport(viewport(width = width, height = height))
+    e
+    upViewport(2)
+}
+frame_lwd = 6
+
+cellplot(3, 2, e = grid.text("(a) TA value 15", just = "left", x = .05))
+cellplot(2, 2, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
+
+cellplot(3, 4, e = grid.text("(b) TA value 25", just = "left", x = .05))
+cellplot(2, 4, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
+
+cellplot(3, 6, e = grid.text("(c) TA value 35", just = "left", x = .05))
+cellplot(2, 6, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
+
+dev.off()
+
+image_read(paste0(outdir, "mobloc_ta.png")) %>%
+    image_composite(image_read("output/crop/post_comp_strength_TA15.png"), offset = "+010+010") %>%
+    image_composite(image_read("output/crop/post_comp_strength_TA25.png"), offset = "+760+010") %>%
+    image_composite(image_read("output/crop/post_comp_strength_TA35.png"), offset = "+1510+010") %>%
+    image_write(path = paste0(outdir, "mobloc_ta.png"))
+
+
+
 
