@@ -17,6 +17,9 @@ mobvis_settings(
   cell_colors = c(Selected = "red", `Small cell` = "black", `Normal cell` = "black"),
   cell_size = 0.5,
   cell_shape = 19,
+  cell_lwd = 1,
+  cell_border_col = "black",
+  cell_connection_col = "grey50",
   cell_offset = 75,
   cell_legend = FALSE,
   cell_labels = FALSE,
@@ -39,14 +42,14 @@ mobvis_settings(
 )
 
 mobvis_settings_interactive(
-  palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "PairedSet2", pg = "-YlGnBu",
-    pag = "-YlGn", pga = "-YlOrBr"),
+  palettes = list(dBm = "YlGnBu", s = "YlGnBu", bsm = "ColorBrewer", pg = "YlGnBu", pag
+    = "YlGn", pga = "YlOrBr"),
   cell_colors = c(Selected = "red", `Small cell` = "goldenrod3", `Normal cell` =
     "gold"),
   cell_offset = 150,
   cell_legend = TRUE,
   region.lwd = 2,
-  prob_th = 1e-15,
+  prob_th = 0,
   ...
 )
 
@@ -55,7 +58,7 @@ mobvis_settings_animation(style = "cont", ...)
 \arguments{
 \item{titles}{default titles. Named character vector, where the names should be dBm, s, bsm, pag, pg and pga.}
 
-\item{palettes}{default palettes. Should be a list with the elements called: dBm, s, bsm, pag, pg and pga. The options for each palette are: a vector of colors, a ColorBrewer name, a viridis name (see \code{\link[tmaptools:palette_explorer]{palette_explorer}}). For \code{"bsm"} there are three more options: \code{"hcl"}, \code{"rainbow"}, and \code{"PairedSet2"}. The last option refers to two ColorBrewer palettes combined.}
+\item{palettes}{default palettes. Should be a list with the elements called: dBm, s, bsm, pag, pg and pga. The options for each palette are: a vector of colors, a ColorBrewer name, a viridis name (see \code{\link[tmaptools:palette_explorer]{palette_explorer}}). For \code{"bsm"} there are three more options: \code{"hcl"}, \code{"rainbow"}, and \code{"ColorBrewer"}. The last option refers to several ColorBrewer palettes combined.}
 
 \item{palette}{default palette for non-standard plots}
 
@@ -66,6 +69,12 @@ mobvis_settings_animation(style = "cont", ...)
 \item{cell_size}{size of the cell(s)}
 
 \item{cell_shape}{shape of the cell(s), by default a dot. Run the last example from \code{\link[tmap:tm_symbols]{tm_symbols}} to see all options.}
+
+\item{cell_lwd}{border line width of the cells, and the lines that connect directional cells when \code{cell_offset > 0}}
+
+\item{cell_border_col}{line color for the cell borders}
+
+\item{cell_connection_col}{line color for the cell connection lines between directional cells when \code{cell_offset > 0}}
 
 \item{cell_offset}{offset of the cell(s). If not 0, the cells are moved into the propagation direction}
 

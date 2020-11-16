@@ -162,7 +162,7 @@ save_maps2(tm, "ss_s")
 tm = map_sig_strength(ZL_raster, ZL_strength, cp = ZL_cellplan, cells = "EIJ_769_N1", interactive = FALSE, settings = settings2, title = "", type = "dBm") + tm_layout(legend.show = FALSE, scale = 1)
 save_maps2(tm, "ss_dBm")
 
-layout_legend = tm_layout(legend.only = TRUE, legend.outside = FALSE, scale = .95, bg.color = "white", frame = FALSE, inner.margins = 0, outer.margins = 0)
+layout_legend = tm_layout(legend.only = TRUE, legend.outside = FALSE, scale = .85, bg.color = "white", frame = FALSE, inner.margins = 0, outer.margins = 0)
 tm = map_sig_strength(ZL_raster, ZL_strength, cp = ZL_cellplan, cells = "EIJ_769_N1", interactive = FALSE, settings = settings2, title = "", type = "s") + layout_legend
 tmap_save(tm, filename = paste0(cropdir, "ss_s_legend.png"), width = 325, height = 510)
 
@@ -174,9 +174,9 @@ tmap_save(tm, filename = paste0(cropdir, "ss_dBm_legend.png"), width = 325, heig
 
 #widths = c(10, 700, 50, 700, 50, 700, 10)
 widths = c(10, 700, 50, 325, 50, 325, 50, 325, 50, 325, 10)
-heights = c(10, 510, 100, 50, 510, 100)
+heights = c(10, 510, 75, 75, 510, 75)
 
-png(paste0(outdir, "mobloc_bsm.png"), width = sum(widths), height = sum(heights))
+png(paste0(outdir, "mobloc_bsm_small_font.png"), width = sum(widths), height = sum(heights))
 
 grid.newpage()
 
@@ -184,7 +184,7 @@ grd = viewport(layout = grid.layout(ncol = length(widths), nrow = length(heights
                                     widths = widths,
                                     heights = heights,
                                     default.units = "native"), xscale = c(0, sum(widths)), yscale = c(0, sum(heights)),
-               gp = gpar(cex = 4.5),
+               gp = gpar(cex = 3),
                clip = "off")
 pushViewport(grd)
 
@@ -215,7 +215,7 @@ cellplot(5, 6:8, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 
 dev.off()
 
-image_read(paste0(outdir, "mobloc_bsm.png")) %>%
+image_read(paste0(outdir, "mobloc_bsm_small_font.png")) %>%
     image_composite(image_read("output/crop/basemap.png"), offset = "+010+010") %>%
     image_composite(image_read("output/crop/bsm_v.png"), offset = "+760+010") %>%
     image_composite(image_read("output/crop/bsm_ss.png"), offset = "+1510+010") %>%
@@ -223,7 +223,7 @@ image_read(paste0(outdir, "mobloc_bsm.png")) %>%
     image_composite(image_read("output/crop/ss_dBm_legend.png"), offset = "+760+670") %>%
     image_composite(image_read("output/crop/ss_s.png"), offset = "+1135+670") %>%
     image_composite(image_read("output/crop/ss_s_legend.png"), offset = "+1885+670") %>%
-    image_write(path = paste0(outdir, "mobloc_bsm.png"))
+    image_write(path = paste0(outdir, "mobloc_bsm_small_font.png"))
 
 
 
@@ -284,12 +284,12 @@ mapply(function(prior, prior_name) {
 
 
 
-widths = c(100, 700, 100, 700, 50, 700, 10)
+widths = c(75, 700, 100, 700, 50, 700, 10)
 #heights = c(10, 100, 700, 100, 50, 700, 50, 700, 50, 700, 100)
-heights = c(10, 100, 510, 100, 50, 510, 50, 510, 50, 510, 50, 510, 100)
+heights = c(10, 75, 510, 75, 75, 510, 50, 510, 50, 510, 50, 510, 75)
 
 
-png(paste0(outdir, "mobloc_multiples.png"), width = sum(widths), height = sum(heights))
+png(paste0(outdir, "mobloc_multiples_small_fonts.png"), width = sum(widths), height = sum(heights))
 
 grid.newpage()
 
@@ -297,7 +297,7 @@ grd = viewport(layout = grid.layout(ncol = length(widths), nrow = length(heights
                               widths = widths,
                               heights = heights,
                               default.units = "native"), xscale = c(0, sum(widths)), yscale = c(0, sum(heights)),
-               gp = gpar(cex = 4.5),
+               gp = gpar(cex = 3.25),
                clip = "off")
 pushViewport(grd)
 
@@ -307,7 +307,7 @@ cellplot = function(row, col, width = 1, height = 1, e) {
     e
     upViewport(2)
 }
-cex_small = 0.85
+cex_small = 1
 frame_lwd = 6
 
 cellplot(4, 2, e = grid.text("(a) Basemap", just = "left", x = .05))
@@ -341,8 +341,8 @@ cellplot(8, 6, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 cellplot(10, 6, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 cellplot(12, 6, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 
-grid.lines(y = unit(c(2330, 2330), "native"), gp = gpar(lwd = 10, col = "grey65"))
-grid.lines(x = unit(c(850, 850), "native"), gp = gpar(lwd = 10, col = "grey65"))
+grid.lines(y = unit(c(2315, 2315), "native"), gp = gpar(lwd = 10, col = "grey65"))
+grid.lines(x = unit(c(825, 825), "native"), gp = gpar(lwd = 10, col = "grey65"))
 
 dev.off()
 
@@ -353,7 +353,7 @@ cell_offset = function(row, col) {
 }
 
 gc()
-image_read(paste0(outdir, "mobloc_multiples.png")) %>%
+image_read(paste0(outdir, "mobloc_multiples_small_fonts.png")) %>%
     image_composite(image_read("output/crop/basemap2.png"), offset = cell_offset(3,2)) %>%
 
     image_composite(image_read("output/crop/llh_voronoi.png"), offset = cell_offset(3,4)) %>%
@@ -375,7 +375,7 @@ image_read(paste0(outdir, "mobloc_multiples.png")) %>%
     image_composite(image_read("output/crop/post_comp_voronoi.png"), offset = cell_offset(12,4)) %>%
     image_composite(image_read("output/crop/post_comp_strength.png"), offset = cell_offset(12,6)) %>%
 
-    image_write(path = paste0(outdir, "mobloc_multiples.png"))
+    image_write(path = paste0(outdir, "mobloc_multiples_small_fonts.png"))
 
 
 ############# Figure 3 (TA)
@@ -414,9 +414,9 @@ mapply(function(prior, prior_name) {
 
 #widths = c(10, 700, 50, 700, 50, 700, 10)
 widths = c(10, 700, 50, 700, 50, 700, 10)
-heights = c(10, 510, 100)
+heights = c(10, 510, 75)
 
-png(paste0(outdir, "mobloc_ta.png"), width = sum(widths), height = sum(heights))
+png(paste0(outdir, "mobloc_ta_small_font.png"), width = sum(widths), height = sum(heights))
 
 grid.newpage()
 
@@ -424,7 +424,7 @@ grd = viewport(layout = grid.layout(ncol = length(widths), nrow = length(heights
                                     widths = widths,
                                     heights = heights,
                                     default.units = "native"), xscale = c(0, sum(widths)), yscale = c(0, sum(heights)),
-               gp = gpar(cex = 4.5),
+               gp = gpar(cex = 3),
                clip = "off")
 pushViewport(grd)
 
@@ -447,12 +447,19 @@ cellplot(2, 6, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 
 dev.off()
 
-image_read(paste0(outdir, "mobloc_ta.png")) %>%
+image_read(paste0(outdir, "mobloc_ta_small_font.png")) %>%
     image_composite(image_read("output/crop/post_comp_strength_TA15.png"), offset = "+010+010") %>%
     image_composite(image_read("output/crop/post_comp_strength_TA25.png"), offset = "+760+010") %>%
     image_composite(image_read("output/crop/post_comp_strength_TA35.png"), offset = "+1510+010") %>%
-    image_write(path = paste0(outdir, "mobloc_ta.png"))
+    image_write(path = paste0(outdir, "mobloc_ta_small_font.png"))
 
 
+
+
+png("output/radiation_plots2.png", width = 900, height = 450)
+gridExtra::grid.arrange(radiation_plot(type = "a", beam_width = 64, db_back = -30, base_size = 20),
+                        radiation_plot(type = "e", beam_width = 12, db_back = -30, base_size = 20),
+                        ncol = 2)
+dev.off()
 
 

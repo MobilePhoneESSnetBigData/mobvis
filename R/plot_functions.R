@@ -192,14 +192,17 @@ radiation_plot <- function(type = "a", beam_width, db_back = -30, base_size = 11
     brks <- sort(c(brks, df3$x))
   }
 
+
+  scale = base_size/11
+
   ggplot(df, aes(x=deg, y= dbLoss)) +
     scale_x_continuous(title, breaks = brks) +
-    geom_hline(yintercept = c(-30, -20, -10, 0), colour = "grey70", size = 0.4) +
-    geom_vline(xintercept = seq(0, 330, by = 30), colour = "grey70", size = 0.4) +
-      geom_line(size = 0.5) +
-      geom_vline(xintercept = df3$x, colour = "red", size = 0.4) +
-    geom_point(aes(x=x,y=y), data=df3, colour = "red", size = 1) +
-    geom_text(aes(label = deg, x = a, y=deg-2), data = df2, size = 3, color = "grey20") +
+    geom_hline(yintercept = c(-30, -20, -10, 0), colour = "grey70", size = 0.4*scale) +
+    geom_vline(xintercept = seq(0, 330, by = 30), colour = "grey70", size = 0.4*scale) +
+      geom_line(size = 0.5*scale) +
+      geom_vline(xintercept = df3$x, colour = "red", size = 0.4*scale) +
+    geom_point(aes(x=x,y=y), data=df3, colour = "red", size = 1*scale) +
+    geom_text(aes(label = deg, x = a, y=deg-2), data = df2, size = 3 * scale, color = "grey20") +
     scale_y_continuous(limits = c(-35, 0)) +
     coord_polar(theta = "x", start=start) +
     theme_bw(base_size = base_size) +

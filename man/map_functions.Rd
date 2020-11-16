@@ -31,7 +31,6 @@ map_best_server(
   cells = NA,
   region = NULL,
   dev = NULL,
-  type = c("dBm", "s"),
   interactive = TRUE,
   title = NA,
   settings = mobvis_settings(),

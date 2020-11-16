@@ -80,7 +80,7 @@ mobvis_settings <- function(titles = c(dBm = "Signal strength in dBm",
 #' @export
 #' @name mobvis_settings_interactive
 #' @rdname mobvis_settings
-mobvis_settings_interactive <- function(palettes = list(dBm = "YlGnBu", s = "-YlGnBu", bsm = "ColorBrewer", pg = "-YlGnBu", pag = "-YlGn", pga = "-YlOrBr"),
+mobvis_settings_interactive <- function(palettes = list(dBm = "YlGnBu", s = "YlGnBu", bsm = "ColorBrewer", pg = "YlGnBu", pag = "YlGn", pga = "YlOrBr"),
                                         cell_colors = c("Selected" = "red", "Small cell" = "goldenrod3", "Normal cell" = "gold"),
                                         cell_offset = 150,
                                         cell_legend = TRUE,
