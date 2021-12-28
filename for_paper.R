@@ -107,6 +107,14 @@ crop_image2 = function(f, f2) {
     image_write(image2, path = f2)
 }
 
+crop_image3 = function(f, f2) {
+    image = image_read(f)
+    image2 = image_crop(image, "1500x900+847+2047")
+    image3 = image_resize(image2, "1000x600")
+    image_write(image3, path = f2)
+}
+
+
 save_maps = function(tm, name) {
     f = paste0(outdir, name, ".png")
     f2 = paste0(cropdir, name, ".png")
@@ -121,7 +129,12 @@ save_maps2 = function(tm, name) {
     crop_image2(f, f2)
 }
 
-
+save_maps3 = function(tm, name) {
+    f = paste0(outdir, name, ".png")
+    f2 = paste0(cropdir, name, ".png")
+    tmap::tmap_save(tm, filename = f, width = 4000, height = 4000)
+    crop_image3(f, f2)
+}
 ############ mobvis  settings and preprocessing #################################
 
 
@@ -148,7 +161,137 @@ tm = qtm(ZL_raster) +
     tm_layout(legend.outside = TRUE, frame = FALSE, legend.show = FALSE, outer.margins = c(.04))
 save_maps2(tm, "basemap2")
 
+############# Figure BSMs
+
+
+
+tm = map_best_server(ZL_raster, ZL_strength_llh, cp = ZL_cellplan, interactive = FALSE, settings = settings2, title = "") + tm_layout(legend.show = FALSE, scale = 1)
+save_maps2(tm, "bsm_ss")
+
+
+
+
+# randomize a bit (to produce artifical 'realistic' BSM)
+set.seed(1234)
+ZL_cellplan_alt = ZL_cellplan
+ZL_cellplan_alt$ple = ZL_cellplan_alt$ple * rnorm(nrow(ZL_cellplan), mean = 1, sd = .025)
+ZL_cellplan_alt$W = ZL_cellplan_alt$W * rnorm(nrow(ZL_cellplan), mean = 1, sd = .0125)
+ZL_cellplan_alt$range = ZL_cellplan_alt$range * rnorm(nrow(ZL_cellplan), mean = 1, sd = .01)
+
+ZL_strength_alt <- compute_sig_strength(cp = ZL_cellplan_alt, raster = ZL_raster,
+                                    elevation = ZL_elevation, param = ZL_param)
+
+ZL_strength_alt[, s:=s*rnorm(.N, mean = 1, sd = .004)]
+
+ZL_strength_alt[, s:=s*rnorm(.N, mean = 1, sd = .004), by = cell]
+
+
+ZL_strength_llh_alt <- create_strength_llh(ZL_strength_alt, param = ZL_param)
+settings2b = settings2
+settings2b$palettes$bsm = "ColorBrewer26" # 29 stands for a seed to randomize colors; see code below
+
+
+tm = map_best_server(ZL_raster, ZL_strength_llh_alt, cp = ZL_cellplan, interactive = FALSE, settings = settings2b, title = "") + tm_layout(legend.show = FALSE, scale = 1)
+
+
+
+save_maps3(tm, "bsm_ss_alt")
+
+tm = map_best_server(ZL_raster, ZL_strength_llh, cp = ZL_cellplan, interactive = FALSE, settings = settings2b, title = "") + tm_layout(legend.show = FALSE, scale = 1)
+save_maps3(tm, "bsm_ss2")
+
+
+
+widths = c(15, 1000, 100, 1000, 10)
+heights = c(10, 600, 75)
+
+png(paste0(outdir, "mobloc_bsm_comp.png"), width = sum(widths), height = sum(heights))
+
+grid.newpage()
+
+grd = viewport(layout = grid.layout(ncol = length(widths), nrow = length(heights),
+                                    widths = widths,
+                                    heights = heights,
+                                    default.units = "native"), xscale = c(0, sum(widths)), yscale = c(0, sum(heights)),
+               gp = gpar(cex = 3),
+               clip = "off")
+pushViewport(grd)
+
+cellplot = function(row, col, width = 1, height = 1, e) {
+    pushViewport(viewport(layout.pos.row = row, layout.pos.col = col))
+    pushViewport(viewport(width = width, height = height))
+    e
+    upViewport(2)
+}
+frame_lwd = 6
+
+cellplot(3, 2, e = grid.text("(a) Artificial ground truth ", just = "left", x = .05))
+cellplot(3, 4, e = grid.text("(b) Signal strength model", just = "left", x = .05))
+
+dev.off()
+
+image_read(paste0(outdir, "mobloc_bsm_comp.png")) %>%
+    image_composite(image_read("output/crop/bsm_ss_alt.png"), offset = "+015+010") %>%
+    image_composite(image_read("output/crop/bsm_ss2.png"), offset = "+1115+010") %>%
+    image_write(path = paste0(outdir, "mobloc_bsm_comp.png"))
+
+
+# crop in order to calculate similarity
+crp = raster::crop(ZL_raster, raster::extent(c(4017500, 4033800, 3086700, 3096500)))
+
+bsm = mobloc::create_best_server_map(ZL_strength_llh, crp)
+
+bsm_alt = mobloc::create_best_server_map(ZL_strength_llh_alt, crp)
+bsm_vor = mobloc::create_best_server_map(ZL_voronoi_llh, crp)
+
+cls = unique(bsm_alt[])
+
+calculate_confusion_matrix = function(gt, md) {
+    sapply(cls, function(i) {
+        id1 = (gt[] == i)
+        id2 = (md[] == i)
+        m = c(TP = sum(id1 & id2), TN = sum(!id1 & !id2), FN = sum(id1 & !id2), FP = sum(!id1 & id2))
+        m = m / sum(m)
+    })
+}
+
+conf_m = calculate_confusion_matrix(bsm_alt, bsm)
+
+
+precision = with(as.list(as.data.frame(t(conf_m))), {TP / (TP + FP)})
+
+
+recall = with(as.list(as.data.frame(t(conf_m))), {TP / (TP + FN)})
+
+hist(na.omit(precision), breaks = 30)
+hist(na.omit(recall), breaks = 30)
+
+qplot(precision, geom="histogram")
+
+hists = ggplot(data.frame(value = c(precision, recall),
+                  type = c(rep("Precision", length(precision)),
+                           rep("Recall", length(recall)))),
+                  aes(x=value)) +
+    geom_histogram(binwidth = .05, colour = "white") +
+    facet_wrap(~type) +
+    scale_y_continuous("Count") +
+    theme_minimal_hgrid() +
+    theme(axis.title.x = element_blank())
+
+ggsave("output/hist.png", hists, width = 8, height = 3)
+
+
+conf_m_v = calculate_confusion_matrix(bsm_alt, bsm_vor)
+
+precision = with(as.list(conf_m_v), {TP / (TP + FP)})
+recall = with(as.list(conf_m_v), {TP / (TP + FN)})
+
+sum(bsm[] == bsm_alt[]) / raster::ncell(bsm)
+sum(bsm_vor[] == bsm_alt[]) / raster::ncell(bsm)
+
+
 ############# Figure 1
+
 
 tm = map_best_server(ZL_raster, ZL_strength_llh, cp = ZL_cellplan, interactive = FALSE, settings = settings2, title = "") + tm_layout(legend.show = FALSE, scale = 1)
 save_maps2(tm, "bsm_ss")
@@ -316,7 +459,7 @@ cellplot(3, 2, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 
 cellplot(4, 4, e = grid.text("(b) Connection likelihoods", just = "left", x = .05))
 cellplot(2, 4, e = grid.text("Voronoi", gp = gpar(cex = cex_small)))
-cellplot(2, 6, e = grid.text("Signal strength", gp = gpar(cex = cex_small)))
+cellplot(2, 6, e = grid.text("Signal dominance", gp = gpar(cex = cex_small)))
 cellplot(3, 4, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 cellplot(3, 6, e = grid.rect(gp=gpar(fill = "grey80", lwd = frame_lwd)))
 
