@@ -18,6 +18,7 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
     cp2 <- move_cells_into_prop_direction(cp, settings$cell_offset)
     cp_lines <- create_connection_lines(cp, cp2)
 
+
     if (is.na(basemaps[1])) {
         # not working yet
 #        tmap_options(projection = 0, basemaps = NULL)
@@ -29,7 +30,6 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
             tm <- tm_basemap("OpenStreetMap")
         }
     }
-
 
     cell_palette = settings$cell_colors
     cell_legend = settings$cell_legend
@@ -64,10 +64,16 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
         tm <- tm + tm_shape(dev) +
             tm_symbols(size = .04 * settings$dev_size, col = settings$dev_color, shape = settings$dev_shape)
     }
+    #return(tm)
 
     if (!is.null(region)) {
+        if (!all(sf::st_is_valid(region))) {
+            region = sf::st_make_valid(region)
+        }
+        if (all(sf::st_is_valid(region))) {
+            tm <- tm + tm_shape(region, is.master = TRUE) + tm_borders(col = "black", group = "Cell locations", zindex = 403, lwd = settings$region.lwd)
+        }
         #tm <- tm + tm_shape(region) + tm_polygons(col = NA, border.col = "black", group = "Cell locations", interactive = FALSE, alpha = 0)
-        tm <- tm + tm_shape(region, is.master = TRUE) + tm_borders(col = "black", group = "Cell locations", zindex = 403, lwd = settings$region.lwd)
     }
     tm
 }
@@ -96,7 +102,6 @@ base_tmap <- function(cp, region = NULL, basemaps = "OpenStreetMap", cells = cha
 map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = character(), region = NULL, dev = NULL, interactive = TRUE, opacity = 1, proxy = FALSE, settings = mobvis_settings(), ...) {
     # check required columns
     if (!all(c("cell", "small", "direction", "x", "y") %in% names(cp))) stop("cp does not contain all the required columns: cell, small, direction, x, and y")
-
     suppressMessages(tmap_mode(ifelse(interactive, "view", "plot")))
 
     tm2 <- base_tmap(cp = cp,
@@ -226,7 +231,6 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
             settings$s_classes
         }
 
-
         if (var %in% c("dBm", "s") && settings$use_classes) {
             tm <- tm_shape(rst) +
                 tm_raster(names(rst)[1], palette = cls$colors, alpha = opacity, title = title, breaks = cls$breaks, labels = cls$labels, group = "Data", zindex = 404, ...)
@@ -244,7 +248,6 @@ map_mob_cells = function(cp, rst, var = NULL, title = NA, palette = NA, cells = 
         tm <- list()
         title <- ""
     }
-
     if (proxy) {
         tmapProxy("map", x = tm_remove_layer(402) + tm_remove_layer(404) + tm2 + tm)
     } else {

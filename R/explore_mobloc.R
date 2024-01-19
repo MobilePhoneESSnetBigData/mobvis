@@ -59,7 +59,7 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
     }
 
 
-    rect <- create_bbx_rect(raster2bbx(raster)) %>% st_transform(crs = 4326)
+    rect <- st_set_crs(create_bbx_rect(raster2bbx(raster)), st_crs(raster)) %>% st_transform(crs = 4326)
 
 
 
@@ -266,7 +266,8 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
 
             output$map <- renderTmap({
                 #map_mob_cells(cp, rst, var = type, offset = ifelse(input$offset, offset_value, 0), borders = rect, proxy = FALSE, interactive = TRUE, opacity = input$trans, basemaps = "OpenStreetMap", cells = sel)
-
+                #browser()
+                #tm_shape(cp) + tm_dots()
                 base_tmap(cp, rect, basemaps = "OpenStreetMap", settings=settings)
             })
 
@@ -323,7 +324,6 @@ explore_mobloc <- function(cp, raster, strength, priorlist, llhlist, param, filt
                         rst <- create_p_raster(raster, dt, type = type, prior = prior, ta, param, cpsel, settings = settings)
                     }
                 }
-
                 map_mob_cells(cp, rst, var = type, region = rect, proxy = TRUE, interactive = TRUE, opacity = input$trans, cells = sel, settings = settings)
 
             })
